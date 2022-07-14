@@ -21,6 +21,12 @@ CREATE TABLE IF NOT EXISTS banner_category (
     FOREIGN KEY(category_id) REFERENCES category(id)
 );
 
+CREATE TABLE IF NOT EXISTS user_agent (
+    id      BIGINT     NOT NULL PRIMARY KEY,
+    hash    BINARY(32) NOT NULL UNIQUE,
+    string  TEXT       NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS log (
     id              BIGINT       NOT NULL PRIMARY KEY,
     ip              INT UNSIGNED NOT NULL,
@@ -34,17 +40,10 @@ CREATE TABLE IF NOT EXISTS log (
     FOREIGN KEY(user_agent_id) REFERENCES user_agent(id)
 );
 
-CREATE TABLE IF NOT EXISTS user_agent (
-    id      BIGINT     NOT NULL PRIMARY KEY,
-    hash    BINARY(32) NOT NULL UNIQUE,
-    string  TEXT       NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS log_banner_category (
     log_id      BIGINT NOT NULL,
     category_id BIGINT NOT NULL,
 
     FOREIGN KEY(log_id)      REFERENCES log(id),
     FOREIGN KEY(category_id) REFERENCES category(id)
-)
-
+);

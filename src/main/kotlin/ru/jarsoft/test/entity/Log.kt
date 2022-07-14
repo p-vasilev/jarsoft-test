@@ -10,12 +10,13 @@ class Log (
     @GeneratedValue
     var id: Long,
 
-    var ip: Int,
+    @Column(length = 4)
+    var ip: ByteArray,
 
     @ManyToOne
     @JoinColumn(
-        name="user_agent_id",
-        foreignKey = ForeignKey(name="USER_AGENT_ID_FK")
+        name = "user_agent_id",
+        referencedColumnName = "id"
     )
     var userAgent: UserAgent,
 
@@ -23,10 +24,18 @@ class Log (
 
     @ManyToOne
     @JoinColumn(
-        name="selected_banner_id",
-        foreignKey = ForeignKey(name="SELECTED_BANNER_ID_FK")
+        name = "selected_banner_id",
+        referencedColumnName = "id"
     )
     var selectedBanner: Banner?,
+
+    @OneToMany(cascade=[CascadeType.ALL], orphanRemoval = false)
+    @JoinTable(
+        name="log_banner_category",
+        joinColumns = [JoinColumn(name = "log_id", referencedColumnName = "id")],
+        inverseJoinColumns = [JoinColumn(name = "category_id", referencedColumnName = "id")],
+    )
+    var selectedBannerCategories: List<Category>,
 
     var bannerPrice: Double?,
 
