@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:tc:mysql:8.0.29:///db
+    username: user
+    password: password
