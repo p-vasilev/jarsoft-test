@@ -1,0 +1,95 @@
+openapi: 3.0.5
+info:
+  title: jarsoft test app schemas
+  version: 0.0.1
+paths: {}
+
+components:
+  schemas:
+    CategoryWithoutId:
+      type: object
+      properties:
+        name:
+          type: string
+          required: true
+        requestId:
+          type: string
+          required: true
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          required: true
+        name:
+          type: string
+          required: true
+        requestId:
+          type: string
+          required: true
+      examples:
+        $ref: "examples.yaml#/components/examples/Category"
+
+
+    IdNameArray:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            required: true
+          name:
+            type: string
+            required: true
+      examples:
+        $ref: "examples.yaml#/components/examples/IdNameArray"
+
+    BannerWithoutId:
+      type: object
+      properties:
+        name:
+          type: string
+          required: true
+        text:
+          type: string
+          required: true
+        price:
+          type: number
+          format: double
+          required: true
+        categories:
+          type: array
+          items:
+            type: integer
+            format: int64
+          required: true
+
+    Banner:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          required: true
+        name:
+          type: string
+          required: true
+        text:
+          type: string
+          required: true
+        price:
+          type: number
+          format: double
+          required: true
+        categories:
+          type: array
+          items:
+            type: integer
+            format: int64
+          required: true
+
+  # schemas end

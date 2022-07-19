@@ -9,9 +9,11 @@ class Category (
     @GeneratedValue
     var id: Long,
 
-    @Column(length=64)
+    @Column(length = 64, unique = true)
     var name: String,
 
-    @Column(length=64)
-    var requestId: String
+    @Column(length = 64, unique = true)
+    var requestId: String,
+
+    var valid: Boolean
 )

@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: ""
+  version: 0.0.1
+paths: {}
+
+components:
+  examples:
+    Category:
+      value: '
+        {
+          "id": 1,
+          "name": "Music",
+          "requestId": "music"
+        }'
+
+    IdNameArray:
+      value: '
+        [
+          {
+            "id": 42
+            "name": "foo"
+          },
+          {
+            "id": 7
+            "name": "bar"
+          }
+        ]'

@@ -16,13 +16,13 @@ class Banner (
 
     var price: Double,
 
-    var valid: Boolean,
-
     @ManyToMany
     @JoinTable(
         name="banner_category",
         joinColumns = [JoinColumn(name = "banner_id", referencedColumnName = "id")],
         inverseJoinColumns = [JoinColumn(name = "category_id", referencedColumnName = "id")]
     )
-    var categories: List<Category>
+    var categories: List<Category>,
+
+    var valid: Boolean
 )
