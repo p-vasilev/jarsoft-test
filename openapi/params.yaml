@@ -1,0 +1,21 @@
+openapi: 3.0.3
+info:
+  title: Jarsoft Test App params
+  description: Jarsoft Test App params
+  version: 0.0.1
+paths: {}
+  
+components:
+  parameters:
+    Name:
+      in: query
+      name: name
+      schema:
+          type: string
+      required: true
+    RequestId:
+      in: query
+      name: requestId
+      schema:
+        type: string
+      required: true

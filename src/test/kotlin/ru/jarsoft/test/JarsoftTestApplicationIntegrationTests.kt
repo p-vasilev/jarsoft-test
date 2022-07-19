@@ -1,5 +1,7 @@
 package ru.jarsoft.test
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -10,6 +12,9 @@ import org.springframework.http.HttpMethod
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 import org.testcontainers.junit.jupiter.Testcontainers
+import ru.jarsoft.test.dto.BannerDto
+import ru.jarsoft.test.dto.BannerWithoutId
+import ru.jarsoft.test.dto.CategoryDto
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -25,6 +30,79 @@ class JarsoftTestApplicationIntegrationTests {
 
     fun createURL(uri: String) = "http://localhost:$port$uri"
 
+    fun sendCreateCategoryRequest(name: String, requestId: String) {
+        val entity = HttpEntity(null, headers)
+        restTemplate.exchange(
+            createURL("/category/new?name=$name&requestId=$requestId"),
+            HttpMethod.PUT,
+            entity,
+            String::class.java
+        )
+    }
+
+    fun sendCreateBannerRequest(
+        name: String,
+        text: String,
+        price: Double,
+        catIds: List<Long>
+    ) {
+        val entity2 = HttpEntity(
+            Json.encodeToString(
+                BannerWithoutId.serializer(),
+                BannerWithoutId(
+                    name,
+                    text,
+                    price,
+                    catIds
+                )
+            ),
+            headers
+        )
+        restTemplate.exchange(
+            createURL("/banner/new"),
+            HttpMethod.PUT,
+            entity2,
+            String::class.java
+        )
+    }
+
+    fun sendGetAllCategoriesRequest(): List<CategoryDto> {
+        val entity = HttpEntity(null, headers)
+        val response = restTemplate.exchange(
+            createURL("/category/all"),
+            HttpMethod.GET,
+            entity,
+            String::class.java
+        )
+
+        val categoryDtos = Json.parseToJsonElement(response.body!!).jsonArray.map {
+            Json.decodeFromJsonElement(
+                CategoryDto.serializer(),
+                it
+            )
+        }
+        return categoryDtos
+    }
+
+    fun sendGetAllBannersRequest(): List<BannerDto> {
+        val entity = HttpEntity(null, headers)
+        val response = restTemplate.exchange(
+            createURL("/banner/all"),
+            HttpMethod.GET,
+            entity,
+            String::class.java
+        )
+
+        val bannerDtos = Json.parseToJsonElement(response.body!!).jsonArray.map {
+            Json.decodeFromJsonElement(
+                BannerDto.serializer(),
+                it
+            )
+        }
+
+        return bannerDtos
+    }
+
     @Test
     @Transactional
     fun contextLoads() {
@@ -37,23 +115,18 @@ class JarsoftTestApplicationIntegrationTests {
         val catName = "Music"
         val requestId = "music"
         // send request to save a category
-        restTemplate.exchange(
-            createURL("/category?name=$catName&requestId=$requestId"),
-            HttpMethod.PUT,
-            entity,
-            String::class.java
-        )
+        sendCreateCategoryRequest(catName, requestId)
 
-        val response = restTemplate.exchange(
-            createURL("/category"),
-            HttpMethod.GET,
-            entity,
-            String::class.java
-        )
+        val categoryDtos = sendGetAllCategoriesRequest()
 
-        // TODO make proper assertions
-        // (in other tests too)
-        assert(response.hasBody() && response.body!!.isNotEmpty())
+        // should be 1 category
+        assert(
+            categoryDtos.count {
+                it.name == catName &&
+                it.requestId == requestId
+            } == 1 &&
+            categoryDtos.count() == 1
+        )
     }
 
     @Test
@@ -63,34 +136,40 @@ class JarsoftTestApplicationIntegrationTests {
         val catName = "Music"
         val requestId = "music"
         // request to add category
-        restTemplate.exchange(
-            createURL("/category?name=$catName&requestId=$requestId"),
-            HttpMethod.PUT,
-            entity,
-            String::class.java
-        )
+        sendCreateCategoryRequest(catName, requestId)
+
+        val categoryDtos = sendGetAllCategoriesRequest()
+
+        val catId = categoryDtos.first {
+            it.name == catName &&
+            it.requestId == requestId
+        }.id
 
         val bannerName = "awesome banner"
         val bannerText = "Lorem ipsum"
-        val bannerPrice = "0.42"
+        val bannerPrice = 0.42
+
         // request to add banner
-        restTemplate.exchange(
-            createURL("/banner?name=$bannerName&text=$bannerText&price=$bannerPrice"),
-            HttpMethod.PUT,
-            entity,
-            String::class.java
+        sendCreateBannerRequest(
+            bannerName,
+            bannerText,
+            bannerPrice,
+            listOf(catId)
         )
 
         // get all banners
-        val response = restTemplate.exchange(
-            createURL("/banner"),
-            HttpMethod.GET,
-            entity,
-            String::class.java
-        )
+        val bannerDtos = sendGetAllBannersRequest()
 
-        assert(response.hasBody() && response.body!!.isNotBlank())
-        println(response.body)
+        // should have 1 banner
+        assert(
+            bannerDtos.count { dto ->
+                dto.name == bannerName &&
+                dto.text == bannerText &&
+                dto.price == bannerPrice &&
+                dto.categories.map { it.id } == listOf(catId)
+            } == 1 &&
+            bannerDtos.count() == 1
+        )
     }
 
     @Test
@@ -102,28 +181,54 @@ class JarsoftTestApplicationIntegrationTests {
 
         // add category
         restTemplate.exchange(
-            createURL("/category?name=$catName&requestId=$requestId"),
+            createURL("/category/new?name=$catName&requestId=$requestId"),
             HttpMethod.PUT,
             entity,
             String::class.java
         )
 
-        // remove category
-        restTemplate.exchange(
-            createURL("/category/delete?id=..."),
-            HttpMethod.DELETE,
-            entity,
-            String::class.java
-        )
-
+        // get cat id
         val response = restTemplate.exchange(
-            createURL("/category"),
+            createURL("/category/all"),
             HttpMethod.GET,
             entity,
             String::class.java
         )
 
-        assert(response.body == null || response.body!!.isEmpty())
+        val categoryDtos = Json.parseToJsonElement(response.body!!).jsonArray.map {
+            Json.decodeFromJsonElement(
+                CategoryDto.serializer(),
+                it
+            )
+        }
+
+        val catId = categoryDtos.first {
+            it.name == catName &&
+            it.requestId == requestId
+        }.id
+
+        // remove category
+        restTemplate.exchange(
+            createURL("/category/delete?id=$catId"),
+            HttpMethod.DELETE,
+            entity,
+            String::class.java
+        )
+
+        // get categories
+        val response2 = restTemplate.exchange(
+            createURL("/category/all"),
+            HttpMethod.GET,
+            entity,
+            String::class.java
+        )
+
+        // should be empty
+        assert(
+            response.body == null ||
+            response.body!!.isEmpty() ||
+            Json.parseToJsonElement(response2.body!!).jsonArray.isEmpty()
+        )
     }
 
 

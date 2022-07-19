@@ -22,6 +22,6 @@ data class BannerWithoutId(
     @Schema(example = "9.99", description = "price of the banner")
     val price: Double,
 
-    @Schema(example = "[\"Music\", \"IT\"]", description = "categories that the banner relates to")
+    @Schema(example = "[\"Music\", \"IT\"]", description = "ids of categories that the banner relates to")
     val categories: List<Long>
 )

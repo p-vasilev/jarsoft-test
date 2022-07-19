@@ -52,12 +52,9 @@ paths:
 
   /category/new:
     post:
-      requestBody:
-        description: "new category to be created"
-        content:
-          application/json:
-            schema:
-              $ref: "schemas.yaml#/components/schemas/CategoryWithoutId"
+      parameters:
+        - $ref: "/params.yaml/#/components/parameters/Name"
+        - $ref: "/params.yaml/#/components/parameters/RequestId"
       responses:
         200:
           description: "category successfully created"
