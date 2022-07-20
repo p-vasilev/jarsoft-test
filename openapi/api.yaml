@@ -58,6 +58,14 @@ paths:
         409:
           description: "can't delete a category that is connected to existing banner"
 
+    get:
+      description: "get a category with given id"
+      responses:
+        200:
+          description: "OK"
+        404:
+          description: "the category with this id doesn't exist or was already deleted"
+
   /category/new:
     post:
       parameters:
