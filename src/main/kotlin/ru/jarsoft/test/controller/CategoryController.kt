@@ -1,24 +1,25 @@
 package ru.jarsoft.test.controller
 
 import org.springframework.web.bind.annotation.*
+import ru.jarsoft.test.entity.Category
 import ru.jarsoft.test.service.CategoryService
 
 @RestController("/category")
 class CategoryController(
-    service: CategoryService
+    val service: CategoryService
 ) {
 
     @GetMapping("/all")
-    fun getAllCategories() {
-        TODO()
+    fun getAllCategories(): List<Category> {
+        return service.getAllCategories()
     }
 
     @PostMapping("/new")
     fun createCategory(
         @RequestParam name: String,
         @RequestParam requestId: String
-    ) {
-        TODO()
+    ): Long {
+        return service.createCategory(name, requestId)
     }
 
     @PutMapping("/{id}")
@@ -27,13 +28,13 @@ class CategoryController(
         @RequestParam name: String,
         @RequestParam requestId: String
     ) {
-        TODO()
+        service.updateCategory(id, name, requestId)
     }
 
     @DeleteMapping("/{id}")
     fun deleteCategory(
         @PathVariable id: Long
     ) {
-        TODO()
+        service.deleteCategoryById(id)
     }
 }

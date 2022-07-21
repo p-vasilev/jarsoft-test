@@ -1,50 +1,53 @@
 package ru.jarsoft.test.controller
 
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import ru.jarsoft.test.NotFoundException
 import ru.jarsoft.test.dto.BannerWithoutId
+import ru.jarsoft.test.dto.IdName
+import ru.jarsoft.test.dto.BannerDto
+import ru.jarsoft.test.dto.mapper.BannerDtoMapper
 import ru.jarsoft.test.service.BannerService
 
 @RestController("/banner")
 class BannerController(
-    service: BannerService
+    val service: BannerService,
+    val bannerDtoMapper: BannerDtoMapper
 ) {
-    @GetMapping("/ids_and_names")
-    fun getIdsAndNames() {
-        TODO()
+
+    @GetMapping("/banner/ids_and_names")
+    fun getIdsAndNames(): List<IdName> {
+        return service.getIdsAndNames()
     }
 
-    @PostMapping("/new")
+    @PostMapping("/banner/new")
     fun createBanner(
         @RequestBody newBanner: BannerWithoutId
-    ) {
-        TODO()
+    ): Long {
+        return service.createBanner(newBanner)
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/banner/{id}")
     fun getBanner(
         @PathVariable id: Long
-    ) {
-        TODO()
+    ): BannerDto {
+        val answer = service.getBannerById(id)
+        if (answer.isEmpty)
+            throw NotFoundException()
+        return bannerDtoMapper.toDTO(answer.get())
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/banner/{id}")
     fun deleteBanner(
         @PathVariable id: Long
     ) {
-        TODO()
+        service.deleteBannerById(id)
     }
 
-    @PutMapping
+    @PutMapping("/banner/{id}")
     fun updateBanner(
         @PathVariable id: Long,
         @RequestBody newBanner: BannerWithoutId
     ) {
-        TODO()
+        service.updateBanner(id, newBanner)
     }
 }

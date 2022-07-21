@@ -16,7 +16,7 @@ class Banner (
 
     var price: Double,
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name="banner_category",
         joinColumns = [JoinColumn(name = "banner_id", referencedColumnName = "id")],

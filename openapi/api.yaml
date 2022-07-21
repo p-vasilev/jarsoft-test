@@ -74,6 +74,11 @@ paths:
       responses:
         200:
           description: "category successfully created"
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
         409:
           description: "can't create category with this name or requestId (they have to be unique)"
 
@@ -149,6 +154,11 @@ paths:
       responses:
         200:
           description: "banner successfully created"
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
         409:
           description: "can't create with given name (it has to be unique)"
 
