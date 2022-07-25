@@ -1,0 +1,2 @@
+ALTER TABLE banner
+    MODIFY price DEC(32, 2) NOT NULL;

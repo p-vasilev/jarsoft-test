@@ -8,25 +8,26 @@ import ru.jarsoft.test.dto.BannerDto
 import ru.jarsoft.test.dto.mapper.BannerDtoMapper
 import ru.jarsoft.test.service.BannerService
 
-@RestController("/banner")
+@RestController
+@RequestMapping("/banner")
 class BannerController(
     val service: BannerService,
     val bannerDtoMapper: BannerDtoMapper
 ) {
 
-    @GetMapping("/banner/ids_and_names")
+    @GetMapping("/ids_and_names")
     fun getIdsAndNames(): List<IdName> {
         return service.getIdsAndNames()
     }
 
-    @PostMapping("/banner/new")
+    @PostMapping("/new")
     fun createBanner(
         @RequestBody newBanner: BannerWithoutId
     ): Long {
         return service.createBanner(newBanner)
     }
 
-    @GetMapping("/banner/{id}")
+    @GetMapping("/{id}")
     fun getBanner(
         @PathVariable id: Long
     ): BannerDto {
@@ -36,18 +37,26 @@ class BannerController(
         return bannerDtoMapper.toDTO(answer.get())
     }
 
-    @DeleteMapping("/banner/{id}")
+    @DeleteMapping("/{id}")
     fun deleteBanner(
         @PathVariable id: Long
     ) {
         service.deleteBannerById(id)
     }
 
-    @PutMapping("/banner/{id}")
+    @PutMapping("/{id}")
     fun updateBanner(
         @PathVariable id: Long,
         @RequestBody newBanner: BannerWithoutId
     ) {
         service.updateBanner(id, newBanner)
+    }
+
+    @GetMapping("/all")
+    fun getAllBanners(): List<BannerDto> {
+        val serviceResult = service.getAllBanners()
+        return serviceResult.map {
+            bannerDtoMapper.toDTO(it)
+        }
     }
 }

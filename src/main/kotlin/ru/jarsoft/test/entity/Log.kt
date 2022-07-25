@@ -7,10 +7,11 @@ import javax.persistence.*
 @Table(name="log")
 class Log (
     @Id
-    @GeneratedValue
-    var id: Long,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    var id: Long = 0,
 
-    @Column(length = 4)
+    @Column(name = "ip", length = 4)
     var ip: ByteArray,
 
     @ManyToOne
@@ -20,11 +21,12 @@ class Log (
     )
     var userAgent: UserAgent,
 
+    @Column(name = "request_time")
     var requestTime: Instant,
 
     @ManyToOne
     @JoinColumn(
-        name = "selected_banner_id",
+        name = "banner_id",
         referencedColumnName = "id"
     )
     var selectedBanner: Banner?,
@@ -37,7 +39,9 @@ class Log (
     )
     var selectedBannerCategories: List<Category>,
 
-    var bannerPrice: Double?,
+    @Column(name = "price")
+    var price: Double?,
 
+    @Column(name = "reason")
     var reason: String?
 )

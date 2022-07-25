@@ -6,14 +6,20 @@ import javax.persistence.*
 @Table(name = "category")
 class Category (
     @Id
-    @GeneratedValue
-    var id: Long,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    var id: Long = 0,
 
-    @Column(length = 64, unique = true)
+    @Column(name = "name", length = 64, unique = true)
     var name: String,
 
-    @Column(length = 64, unique = true)
+    @Column(name = "request_id", length = 64, unique = true)
     var requestId: String,
 
+    @Column(name = "valid")
     var valid: Boolean
-)
+) {
+    override fun toString(): String {
+        return "Category(id=$id, name='$name', requestId='$requestId', valid=$valid)"
+    }
+}

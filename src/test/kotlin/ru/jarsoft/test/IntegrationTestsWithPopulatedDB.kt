@@ -1,15 +1,17 @@
 package ru.jarsoft.test
 
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.Transactional
 import org.testcontainers.junit.jupiter.Testcontainers
 import ru.jarsoft.test.dto.*
 
@@ -17,15 +19,17 @@ import ru.jarsoft.test.dto.*
 @Testcontainers
 @ActiveProfiles("testcontainers")
 class IntegrationTestsWithPopulatedDB {
-    val restTemplate = TestRestTemplate()
-    val headers = HttpHeaders()
+
     @LocalServerPort
     val port = 0
     lateinit var requestSender: RequestSender
 
-    @BeforeAll
-    fun getRequestSender() {
-        requestSender = RequestSender(port)
+    @Autowired
+    lateinit var cleaner: DatabaseCleaner
+
+    @AfterEach
+    fun cleanUp() {
+        cleaner.deleteEverything()
     }
 
     val catInitList = listOf(
@@ -58,74 +62,98 @@ class IntegrationTestsWithPopulatedDB {
 
     @BeforeEach
     fun populateDB() {
+        requestSender = RequestSender(port)
+
         catInitList.forEach {
             requestSender.createCategory(it)
         }
         catList = requestSender.getAllCategories()
+        println(catList)
 
-        for (i in 0..4) {
-            requestSender.createBanner(
-                bannerInitList[i].apply {
-                    BannerWithoutId(
-                        this.name,
-                        this.text,
-                        this.price,
-                        catList
-                            .filter { it.requestId in catBannerInitList[i] }
-                            .map { it.id }
-                    )
-                }
+        for (i in 0..3) {
+            val currBanner = bannerInitList[i]
+            val newBanner = BannerWithoutId(
+                currBanner.name,
+                currBanner.text,
+                currBanner.price,
+                catList
+                    .filter { catBannerInitList[i].contains(it.requestId) }
+                    .map { it.id }
             )
+            requestSender.createBanner(newBanner)
         }
         bannerList = requestSender.getAllBanners()
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenRemoveCategory_thenGetConflict409() {
-        val response = requestSender.removeCategory(catList[0].id)
-        assert(response!!.statusCode == HttpStatus.CONFLICT) // 409
+        val response = requestSender.deleteCategory(catList[0].id)
+        assert(response!!.statusCode == HttpStatus.CONFLICT) {
+            println("Expected to get 409 Conflict, actual response:")
+            println(response.statusCode)
+            println(response.body)
+        }
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenRemoveBannerThenRemoveCategory_thenBothAreRemoved() {
         // remove kitty videogame banner
-        requestSender.removeBanner(
-            bannerList.first{ it.name == bannerInitList[2].name }.id
-        )
+        val bannerId = bannerList.first{ it.name == bannerInitList[2].name }.id
+        requestSender.deleteBanner(bannerId)
 
         // remove kitties category
-        requestSender.removeCategory(
-            catList.first { it.requestId == "kitties" }.id
-        )
+        val catId = catList.first { it.requestId == "kitties" }.id
+        requestSender.deleteCategory(catId)
 
-        val banners = requestSender.getAllBanners()
-        val categories = requestSender.getAllCategories()
+        val restTemplate = TestRestTemplate()
+        val headers = HttpHeaders()
+        val entity = HttpEntity(null, headers)
+
+        val bannerResponse = restTemplate.exchange(
+            requestSender.createURL("/banner/$bannerId"),
+            HttpMethod.GET,
+            entity,
+            String::class.java
+        )
+        val categoryResponse = restTemplate.exchange(
+            requestSender.createURL("/category/$catId"),
+            HttpMethod.GET,
+            entity,
+            String::class.java
+        )
 
         assert(
-            banners.none { it.name == bannerInitList[2].name }
-        )
-        assert(
-            categories.none { it.requestId == "kitties" }
-        )
-        assert(bannerList.count() == banners.count() + 1)
-        assert(bannerList.containsAll(banners))
-        assert(catList.count() == categories.count() + 1)
-        assert(catList.containsAll(categories))
-
+            bannerResponse.statusCode == HttpStatus.NOT_FOUND &&
+            categoryResponse.statusCode == HttpStatus.NOT_FOUND
+        ) {
+            println("Expected 404 Not Found on both responses")
+            println("Actual responses:")
+            println("bannerResponse:")
+            println(bannerResponse.statusCode)
+            println(bannerResponse.body)
+            println("categoryResponse:")
+            println(categoryResponse.statusCode)
+            println(categoryResponse.body)
+        }
     }
 
     @Test
     fun givenPopulatedDB_whenGetBannerIdsAndNames_thenTheyAreConsistent() {
         val idnames = requestSender.getBannerIdNames()
         val expected = bannerList.map { IdName(it.id, it.name) }
-        assert(idnames.containsAll(expected))
-        assert(expected.containsAll(idnames))
+        assert(idnames.containsAll(expected) && expected.containsAll(idnames)) {
+            println("expected:")
+            expected.forEach {
+                println(it)
+            }
+            println("actual:")
+            idnames.forEach {
+                println(it)
+            }
+        }
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenUpdateCategory_thenItIsUpdated() {
         val requestId = "kitties"
         val newName = "Cats"
@@ -134,12 +162,13 @@ class IntegrationTestsWithPopulatedDB {
 
         requestSender.updateCategory(catId, newName, newRequestId)
         val category = requestSender.getCategory(catId)
-        assert(category.name == newName)
-        assert(category.requestId == newRequestId)
+        assert(category.name == newName && category.requestId == newRequestId) {
+            println("Expected: name - $newName, requestId - $newRequestId")
+            println("Actual: $category")
+        }
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenUpdateCategoryWithNonUniqueName_thenGetConflict() {
         val requestId = "crypto"
         val newName = "IT"
@@ -150,7 +179,6 @@ class IntegrationTestsWithPopulatedDB {
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenUpdateCategoryWithNonUniqueRequestId_thenGetConflict() {
         val requestId = "crypto"
         val newRequestId = "it"
@@ -161,38 +189,34 @@ class IntegrationTestsWithPopulatedDB {
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenDeleteCategoryTwice_thenGetNotFound() {
         val requestId = "crypto"
         val catId = catList.first { it.requestId == requestId }.id
 
-        requestSender.removeCategory(catId)
-        val response = requestSender.removeCategory(catId)
+        requestSender.deleteCategory(catId)
+        val response = requestSender.deleteCategory(catId)
         assert(response!!.statusCode == HttpStatus.NOT_FOUND)
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenCreateCategoryWithNonUniqueName_thenGetConflict() {
         val name = "Cryptocurrency"
         val requestId = "cryptocurr"
 
         val response = requestSender.createCategory(name, requestId)
-        assert(response!!.statusCode == HttpStatus.CONFLICT)
+        assert(response.statusCode == HttpStatus.CONFLICT)
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenCreateCategoryWithNonUniqueRequestId_thenGetConflict() {
         val name = "DogeCoin"
         val requestId = "crypto"
 
         val response = requestSender.createCategory(name, requestId)
-        assert(response!!.statusCode == HttpStatus.CONFLICT)
+        assert(response.statusCode == HttpStatus.CONFLICT)
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenCreateBannerWithNonUniqueName_thenGetConflict() {
         val newBanner = BannerWithoutId("Awesome banner", "Cool text", 1.11, listOf())
         val response = requestSender.createBanner(newBanner)
@@ -200,7 +224,6 @@ class IntegrationTestsWithPopulatedDB {
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenUpdateBanner_itIsUpdated() {
         val name = "Awesome banner"
         val banner = bannerList.first { it.name == name }
@@ -220,7 +243,6 @@ class IntegrationTestsWithPopulatedDB {
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenUpdateBannerWithNonUniqueName_thenGetConflict() {
         val name = "Awesome banner"
         val banner = bannerList.first { it.name == name }
@@ -232,11 +254,14 @@ class IntegrationTestsWithPopulatedDB {
             banner.categories.map { it.id } + catList.first { it.requestId == "pc" }.id
         )
         val response = requestSender.updateBanner(banner.id, newBanner)
-        assert(response!!.statusCode == HttpStatus.CONFLICT)
+        assert(response!!.statusCode == HttpStatus.CONFLICT) {
+            println("Response was not 409 Conflict, actual response:")
+            println(response.statusCode)
+            println(response.body)
+        }
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenBid_thenGetBanner() {
         val categories = listOf("kitties")
         val response = requestSender.getBid(categories)
@@ -248,7 +273,6 @@ class IntegrationTestsWithPopulatedDB {
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenBid_thenGetMostExpensiveBanner() {
         val categories = listOf("it")
         val response = requestSender.getBid(categories)
@@ -266,7 +290,6 @@ class IntegrationTestsWithPopulatedDB {
     }
 
     @Test
-    @Transactional
     fun givenPopulatedDB_whenBidCategoryWithoutBanners_thenGetNoContent() {
         val categories = listOf("crypto")
         val response = requestSender.getBid(categories)

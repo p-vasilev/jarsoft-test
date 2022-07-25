@@ -1,6 +1,7 @@
 package ru.jarsoft.test.service
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import ru.jarsoft.test.ConflictException
 import ru.jarsoft.test.NotFoundException
 import ru.jarsoft.test.dto.BannerWithoutId
@@ -16,13 +17,15 @@ class BannerService(
     val categoryRepository: CategoryRepository
 ) {
 
+    @Transactional
     fun getIdsAndNames(): List<IdName> {
         return repository.getIdsAndNames()
     }
 
+    @Transactional
     fun createBanner(banner: BannerWithoutId): Long {
         val result = repository.findByName(banner.name)
-        if (result.isSuccess)
+        if (result.isPresent)
             throw ConflictException()
 
         return repository.save(
@@ -37,10 +40,12 @@ class BannerService(
         ).id
     }
 
+    @Transactional
     fun getBannerById(id: Long): Optional<Banner> {
         return repository.findById(id)
     }
 
+    @Transactional
     fun deleteBannerById(id: Long) {
         val banOpt = repository.findById(id)
         if (banOpt.isEmpty)
@@ -48,9 +53,10 @@ class BannerService(
         repository.deleteById(id)
     }
 
+    @Transactional
     fun updateBanner(id: Long, banner: BannerWithoutId) {
         val res = repository.findByName(banner.name)
-        if (res.isSuccess && res.getOrNull()!!.id == id)
+        if (res.isPresent && res.get().id != id)
             throw ConflictException()
 
         repository.save(
@@ -64,4 +70,10 @@ class BannerService(
             )
         )
     }
+
+    @Transactional
+    fun getAllBanners(): List<Banner> {
+        return repository.findAllValid()
+    }
+
 }

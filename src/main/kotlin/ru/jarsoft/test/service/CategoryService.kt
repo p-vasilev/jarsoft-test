@@ -1,6 +1,7 @@
 package ru.jarsoft.test.service
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import ru.jarsoft.test.ConflictException
 import ru.jarsoft.test.NotFoundException
 import ru.jarsoft.test.entity.Category
@@ -12,10 +13,12 @@ class CategoryService(
     val repository: CategoryRepository,
     val bannerRepository: BannerRepository
 ) {
+    @Transactional
     fun getAllCategories(): List<Category> {
-        return repository.findAll().toList()
+        return repository.findAll().filter{ it.valid }
     }
 
+    @Transactional
     fun createCategory(name: String, requestId: String): Long {
         val conflicts = repository.findAllByNameOrRequestId(name, requestId)
         if (conflicts.isNotEmpty())
@@ -31,6 +34,7 @@ class CategoryService(
         ).id
     }
 
+    @Transactional
     fun updateCategory(id: Long, name: String, requestId: String) {
         val conflicts = repository.findAllByNameOrRequestId(name, requestId)
         if (conflicts.isNotEmpty() && !(conflicts.size == 1 && conflicts[0].id == id))
@@ -38,7 +42,7 @@ class CategoryService(
 
         repository.save(
             Category(
-                0,
+                id,
                 name,
                 requestId,
                 valid = true
@@ -46,9 +50,10 @@ class CategoryService(
         )
     }
 
+    @Transactional
     fun deleteCategoryById(id: Long) {
         val banners = bannerRepository.findByCategory(id)
-        if (banners.isNotEmpty())
+        if (banners.isNotEmpty() && banners.any { it.valid })
             throw ConflictException()
         val cat = repository.findById(id)
         if (cat.isEmpty)
@@ -57,6 +62,13 @@ class CategoryService(
             throw NotFoundException()
 
         repository.deleteById(id)
+    }
+
+    fun getCategoryById(id: Long): Category {
+        val res = repository.findById(id)
+        if (res.isEmpty || !res.get().valid)
+            throw NotFoundException()
+        return res.get()
     }
 
 }

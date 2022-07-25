@@ -3,10 +3,7 @@ package ru.jarsoft.test
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import ru.jarsoft.test.dto.*
 
 
@@ -20,7 +17,7 @@ class RequestSender (private val port: Int) {
 
     fun createURL(uri: String) = "http://localhost:$port$uri"
 
-    fun createCategory(name: String, requestId: String): ResponseEntity<String>? {
+    fun createCategory(name: String, requestId: String): ResponseEntity<String> {
         val entity = HttpEntity(null, headers)
         return restTemplate.exchange(
             createURL("/category/new?name=$name&requestId=$requestId"),
@@ -38,6 +35,8 @@ class RequestSender (private val port: Int) {
         price: Double,
         catIds: List<Long>
     ): ResponseEntity<String>? {
+        val postHeaders = HttpHeaders()
+        postHeaders.contentType = MediaType.APPLICATION_JSON
         val entity2 = HttpEntity(
             Json.encodeToString(
                 BannerWithoutId.serializer(),
@@ -48,8 +47,9 @@ class RequestSender (private val port: Int) {
                     catIds
                 )
             ),
-            headers
+            postHeaders
         )
+
         return restTemplate.exchange(
             createURL("/banner/new"),
             HttpMethod.POST,
@@ -86,6 +86,11 @@ class RequestSender (private val port: Int) {
             entity,
             String::class.java
         )
+        assert(response.statusCode == HttpStatus.OK) {
+            println("Response was not OK: ${response.statusCode}")
+            println("The response body:")
+            println(response.body)
+        }
 
         val bannerDtos = Json.parseToJsonElement(response.body!!).jsonArray.map {
             Json.decodeFromJsonElement(
@@ -97,7 +102,7 @@ class RequestSender (private val port: Int) {
         return bannerDtos
     }
 
-    fun removeCategory(id: Long): ResponseEntity<String>? {
+    fun deleteCategory(id: Long): ResponseEntity<String>? {
         val entity = HttpEntity(null, headers)
         return restTemplate.exchange(
             createURL("/category/$id"),
@@ -107,7 +112,7 @@ class RequestSender (private val port: Int) {
         )
     }
 
-    fun removeBanner(id: Long): ResponseEntity<String>? {
+    fun deleteBanner(id: Long): ResponseEntity<String>? {
         val entity = HttpEntity(null, headers)
         return restTemplate.exchange(
             createURL("/banner/$id"),
@@ -134,7 +139,10 @@ class RequestSender (private val port: Int) {
     }
 
     fun updateCategory(id: Long, name: String, requestId: String): ResponseEntity<String>? {
-        val entity = HttpEntity(null, headers)
+        val postHeaders = HttpHeaders()
+        postHeaders.contentType = MediaType.APPLICATION_JSON
+
+        val entity = HttpEntity(null, postHeaders)
         return restTemplate.exchange(
             createURL("/category/$id?name=$name&requestId=$requestId"),
             HttpMethod.PUT,
@@ -149,12 +157,15 @@ class RequestSender (private val port: Int) {
         id: Long,
         banner: BannerWithoutId
     ): ResponseEntity<String>? {
+        val postHeaders = HttpHeaders()
+        postHeaders.contentType = MediaType.APPLICATION_JSON
+
         val entity = HttpEntity(
             Json.encodeToString(
                 BannerWithoutId.serializer(),
                 banner
             ),
-            headers)
+            postHeaders)
         return restTemplate.exchange(
             createURL("/banner/$id"),
             HttpMethod.PUT,
