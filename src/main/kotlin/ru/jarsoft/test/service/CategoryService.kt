@@ -15,7 +15,7 @@ class CategoryService(
 ) {
     @Transactional
     fun getAllCategories(): List<Category> {
-        return repository.findAll().filter{ it.valid }
+        return repository.findAllValid()
     }
 
     @Transactional
@@ -52,7 +52,7 @@ class CategoryService(
 
     @Transactional
     fun deleteCategoryById(id: Long) {
-        val banners = bannerRepository.findByCategory(id)
+        val banners = bannerRepository.findByCategoryId(id)
         if (banners.isNotEmpty() && banners.any { it.valid })
             throw ConflictException()
         val cat = repository.findById(id)
@@ -65,8 +65,8 @@ class CategoryService(
     }
 
     fun getCategoryById(id: Long): Category {
-        val res = repository.findById(id)
-        if (res.isEmpty || !res.get().valid)
+        val res = repository.findValidById(id)
+        if (res.isEmpty)
             throw NotFoundException()
         return res.get()
     }

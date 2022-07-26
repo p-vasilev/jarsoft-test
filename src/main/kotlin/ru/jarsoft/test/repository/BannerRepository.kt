@@ -32,9 +32,17 @@ interface BannerRepository: CrudRepository<Banner, Long> {
 
     @Transactional
     @Query(value = "SELECT b FROM Banner b, Category c LEFT JOIN FETCH b.categories WHERE b.valid IS TRUE AND c.id = :id AND c MEMBER OF b.categories")
-    fun findByCategory(id: Long): List<Banner>
+    fun findByCategoryId(id: Long): List<Banner>
 
     @Transactional
-    @Query(value = "SELECT b FROM Banner b LEFT JOIN FETCH b.categories WHERE b.valid = TRUE")
+    @Query(value = "SELECT DISTINCT b FROM Banner b LEFT JOIN FETCH b.categories WHERE b.valid = TRUE")
     fun findAllValid(): List<Banner>
+
+    @Transactional
+    @Query(value = "SELECT b FROM Banner b, Category c LEFT JOIN FETCH b.categories WHERE b.valid IS TRUE AND c MEMBER OF b.categories AND c.requestId IN (:categories)")
+    fun findAllByCategoryRequestIds(categories: List<String>): List<Banner>
+
+    @Transactional
+    @Query(value = "SELECT DISTINCT b FROM Banner b, Category c LEFT JOIN FETCH b.categories WHERE b.valid IS TRUE AND c MEMBER OF b.categories AND c.requestId IN (:categories)")
+    fun findByCategoryRequestIds(categories: List<String>): List<Banner>
 }

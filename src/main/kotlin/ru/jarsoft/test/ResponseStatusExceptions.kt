@@ -8,3 +8,6 @@ class NotFoundException: RuntimeException()
 
 @ResponseStatus(HttpStatus.CONFLICT)
 class ConflictException: RuntimeException()
+
+@ResponseStatus(code = HttpStatus.NO_CONTENT)
+class NoContentException: RuntimeException()

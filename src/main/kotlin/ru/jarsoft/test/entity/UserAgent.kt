@@ -11,7 +11,7 @@ class UserAgent (
     var id: Long = 0,
 
     @Column(name = "hash")
-    var hash: ByteArray,
+    var hash: Array<Byte>,
 
     @Column(name = "string")
     var string: String

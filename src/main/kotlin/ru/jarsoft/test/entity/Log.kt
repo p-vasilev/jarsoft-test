@@ -5,19 +5,20 @@ import javax.persistence.*
 
 @Entity
 @Table(name="log")
-class Log (
+class Log(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     var id: Long = 0,
 
     @Column(name = "ip", length = 4)
-    var ip: ByteArray,
+    var ip: Array<Byte>,
 
     @ManyToOne
     @JoinColumn(
         name = "user_agent_id",
-        referencedColumnName = "id"
+        referencedColumnName = "id",
+        unique = false
     )
     var userAgent: UserAgent,
 
@@ -31,13 +32,13 @@ class Log (
     )
     var selectedBanner: Banner?,
 
-    @OneToMany(cascade=[CascadeType.ALL], orphanRemoval = false)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name="log_banner_category",
         joinColumns = [JoinColumn(name = "log_id", referencedColumnName = "id")],
         inverseJoinColumns = [JoinColumn(name = "category_id", referencedColumnName = "id")],
     )
-    var selectedBannerCategories: List<Category>,
+    var selectedBannerCategories: List<Category>?,
 
     @Column(name = "price")
     var price: Double?,

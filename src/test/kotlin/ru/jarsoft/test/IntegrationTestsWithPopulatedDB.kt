@@ -68,7 +68,6 @@ class IntegrationTestsWithPopulatedDB {
             requestSender.createCategory(it)
         }
         catList = requestSender.getAllCategories()
-        println(catList)
 
         for (i in 0..3) {
             val currBanner = bannerInitList[i]
@@ -265,11 +264,17 @@ class IntegrationTestsWithPopulatedDB {
     fun givenPopulatedDB_whenBid_thenGetBanner() {
         val categories = listOf("kitties")
         val response = requestSender.getBid(categories)
-        assert(response!!.body ==
-                bannerList
-                    .first { dto ->
-                        dto.categories.map{ it.requestId }.contains(categories[0])
-                    }.text)
+        val expected = bannerList
+            .first { dto ->
+                dto.categories.map{ it.requestId }.contains(categories[0])
+            }.text
+        assert(response.body == expected) {
+            println("Expected:")
+            println(expected)
+            println("Actual:")
+            println(response.statusCode)
+            println(response.body)
+        }
     }
 
     @Test
@@ -286,13 +291,78 @@ class IntegrationTestsWithPopulatedDB {
                 dto.categories.map{ it.requestId }.contains(categories[0])
             }.first { it.price == expectedPrice}.text
 
-        assert(response!!.body == expectedText)
+        assert(response.body == expectedText)
     }
 
     @Test
     fun givenPopulatedDB_whenBidCategoryWithoutBanners_thenGetNoContent() {
         val categories = listOf("crypto")
         val response = requestSender.getBid(categories)
-        assert(response!!.statusCode == HttpStatus.NO_CONTENT)
+        assert(response.statusCode == HttpStatus.NO_CONTENT)
+    }
+
+    @Test
+    fun givenPopulatedDB_whenBidTwiceOnSameCategoryWithSameUserAgent_thenGetDifferentBanners() {
+        val categories = listOf("it")
+        val userAgent = "some user agent"
+        val response1 = requestSender.getBidWithUserAgent(categories, userAgent)
+        val response2 = requestSender.getBidWithUserAgent(categories, userAgent)
+
+        assert(
+            response1.body != response2.body
+        )
+
+    }
+
+    @Test
+    fun givenPopulatedDB_whenBidTwiceOnSameCategoryWhichHasOneBannerWithSameUserAgent_thenGetNoContent() {
+        val categories = listOf("kitties")
+        val userAgent = "some user agent"
+        val response1 = requestSender.getBidWithUserAgent(categories, userAgent)
+        val response2 = requestSender.getBidWithUserAgent(categories, userAgent)
+
+
+        val expected =
+            bannerList.first{
+                it.categories
+                .map { dto -> dto.requestId }
+                .intersect(categories)
+                .isNotEmpty()
+            }.text
+
+        assert(
+            response1.body == expected &&
+            response2.statusCode == HttpStatus.NO_CONTENT
+        ) {
+            println("Expected response 1: $expected")
+            println("Expected response 2: No Content")
+            println("Actual response 1:")
+            println(response1.statusCode)
+            println(response1.body)
+            println("Actual response 2:")
+            println(response2.statusCode)
+            println(response2.body)
+        }
+    }
+
+    @Test
+    fun givenPopulatedDB_whenBidTwiceOnSameCategoryWithDifferentUserAgent_thenGetSameBanners() {
+        val categories = listOf("kitties")
+        val userAgent1 = "some user agent"
+        val userAgent2 = "other user agent"
+        println("-------------------------")
+        println("first request")
+        val response1 = requestSender.getBidWithUserAgent(categories, userAgent1)
+        println("-------------------------")
+        println("second request")
+        val response2 = requestSender.getBidWithUserAgent(categories, userAgent2)
+        assert(
+            response1.body == response2.body
+        ) {
+            println("Expected same banners")
+            println("Actual banners:")
+            println("banner #1: ${response1.body}")
+            println("banner #2 : ${response2.body}")
+        }
     }
 }

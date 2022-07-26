@@ -1,0 +1,4 @@
+ALTER TABLE user_agent
+    MODIFY hash BINARY(32) NOT NULL;
+ALTER TABLE user_agent
+    DROP CONSTRAINT hash;

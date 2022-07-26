@@ -210,8 +210,20 @@ class RequestSender (private val port: Int) {
         )
     }
 
-    fun getBid(categories: List<String>): ResponseEntity<String>? {
+    fun getBid(categories: List<String>): ResponseEntity<String> {
         val entity = HttpEntity(null, headers)
+        return restTemplate.exchange(
+            createURL("/bid?" + categories.map { "cat=$it" }.reduce{ a, b -> "$a&$b" }),
+            HttpMethod.GET,
+            entity,
+            String::class.java
+        )
+    }
+
+    fun getBidWithUserAgent(categories: List<String>, userAgent: String): ResponseEntity<String> {
+        val bidHeaders = HttpHeaders()
+        bidHeaders.set("User-Agent", userAgent)
+        val entity = HttpEntity(null, bidHeaders)
         return restTemplate.exchange(
             createURL("/bid?" + categories.map { "cat=$it" }.reduce{ a, b -> "$a&$b" }),
             HttpMethod.GET,
