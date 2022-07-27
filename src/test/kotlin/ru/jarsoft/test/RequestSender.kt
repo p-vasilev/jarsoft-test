@@ -11,9 +11,12 @@ import ru.jarsoft.test.dto.*
  * Used to send requests in tests
  * @param port local server port
  */
-class RequestSender (private val port: Int) {
+class RequestSender (
+    var port: Int,
+) {
     val restTemplate = TestRestTemplate()
     val headers = HttpHeaders()
+    lateinit var jwt: String
 
     fun createURL(uri: String) = "http://localhost:$port$uri"
 
@@ -35,7 +38,7 @@ class RequestSender (private val port: Int) {
         price: Double,
         catIds: List<Long>
     ): ResponseEntity<String>? {
-        val postHeaders = HttpHeaders()
+        val postHeaders = HttpHeaders(headers)
         postHeaders.contentType = MediaType.APPLICATION_JSON
         val entity2 = HttpEntity(
             Json.encodeToString(
@@ -139,7 +142,7 @@ class RequestSender (private val port: Int) {
     }
 
     fun updateCategory(id: Long, name: String, requestId: String): ResponseEntity<String>? {
-        val postHeaders = HttpHeaders()
+        val postHeaders = HttpHeaders(headers)
         postHeaders.contentType = MediaType.APPLICATION_JSON
 
         val entity = HttpEntity(null, postHeaders)
@@ -157,7 +160,7 @@ class RequestSender (private val port: Int) {
         id: Long,
         banner: BannerWithoutId
     ): ResponseEntity<String>? {
-        val postHeaders = HttpHeaders()
+        val postHeaders = HttpHeaders(headers)
         postHeaders.contentType = MediaType.APPLICATION_JSON
 
         val entity = HttpEntity(
@@ -230,6 +233,24 @@ class RequestSender (private val port: Int) {
             entity,
             String::class.java
         )
+    }
+
+    fun login(user: String, password: String) {
+        val entity = HttpEntity(
+            Json.encodeToString(
+                Login.serializer(),
+                Login(user, password)
+            ),
+            headers
+        )
+        val response = restTemplate.exchange(
+            createURL("/login"),
+            HttpMethod.POST,
+            entity,
+            String::class.java
+        )
+        jwt = response.headers["JWT"]!![0]
+        headers.set("Authorization", "Bearer $jwt")
     }
 
 }

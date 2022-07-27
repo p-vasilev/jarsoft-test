@@ -1,17 +1,11 @@
 package ru.jarsoft.test
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -23,8 +17,6 @@ import org.testcontainers.junit.jupiter.Testcontainers
 class JarsoftTestApplicationIntegrationTests(
 ) {
 
-    val restTemplate = TestRestTemplate()
-    val headers = HttpHeaders()
     @LocalServerPort
     var port = 0
 
@@ -36,6 +28,7 @@ class JarsoftTestApplicationIntegrationTests(
     @BeforeEach
     fun getRequestSender() {
         requestSender = RequestSender(port)
+        requestSender.login("user", "hunter2")
     }
 
     @AfterEach
@@ -123,7 +116,6 @@ class JarsoftTestApplicationIntegrationTests(
 
     @Test
     fun givenEmptyDB_whenAddCategoryAndRemoveIt_thenItIsAbsent() {
-        val entity = HttpEntity(null, headers)
         val catName = "Music"
         val requestId = "music"
 
@@ -142,22 +134,15 @@ class JarsoftTestApplicationIntegrationTests(
         requestSender.deleteCategory(catId)
 
         // get categories
-        val response = restTemplate.exchange(
-            requestSender.createURL("/category/all"),
-            HttpMethod.GET,
-            entity,
-            String::class.java
-        )
+        val response = requestSender.getAllCategories()
 
         // should be empty
         assert(
-            response.body == null ||
-            response.body!!.isEmpty() ||
-            Json.parseToJsonElement(response.body!!).jsonArray.isEmpty()
+            response.isEmpty()
         ) {
             println("Response should have been empty")
             println("Actual response:")
-            println(response.body)
+            println(response)
         }
     }
 

@@ -8,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
@@ -63,6 +62,7 @@ class IntegrationTestsWithPopulatedDB {
     @BeforeEach
     fun populateDB() {
         requestSender = RequestSender(port)
+        requestSender.login("user", "hunter2")
 
         catInitList.forEach {
             requestSender.createCategory(it)
@@ -105,8 +105,7 @@ class IntegrationTestsWithPopulatedDB {
         requestSender.deleteCategory(catId)
 
         val restTemplate = TestRestTemplate()
-        val headers = HttpHeaders()
-        val entity = HttpEntity(null, headers)
+        val entity = HttpEntity(null, requestSender.headers)
 
         val bannerResponse = restTemplate.exchange(
             requestSender.createURL("/banner/$bannerId"),
