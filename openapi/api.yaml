@@ -13,7 +13,7 @@ servers:
     description: "The default server url"
 
 paths:
-  /category/all:
+  /api/category/all:
     get:
       responses:
         200:
@@ -28,7 +28,7 @@ paths:
         default:
           $ref: "#/components/responses/UnknownError"
 
-  /category/{id}:
+  /api/category/{id}:
     parameters:
       - in: path
         name: id
@@ -66,7 +66,7 @@ paths:
         404:
           description: "the category with this id doesn't exist or was already deleted"
 
-  /category/new:
+  /api/category/new:
     post:
       parameters:
         - $ref: "params.yaml/#/components/parameters/Name"
@@ -82,7 +82,7 @@ paths:
         409:
           description: "can't create category with this name or requestId (they have to be unique)"
 
-  /banner/ids_and_names:
+  /api/banner/ids_and_names:
     get:
       responses:
         200:
@@ -95,7 +95,7 @@ paths:
           $ref: "#/components/responses/UnknownError"
 
 
-  /banner/{id}:
+  /api/banner/{id}:
     parameters:
       - name: id
         in: path
@@ -143,7 +143,7 @@ paths:
         default:
           $ref: "#/components/responses/UnknownError"
 
-  /banner/new:
+  /api/banner/new:
     post:
       requestBody:
         description: "new banner to be created"
@@ -162,7 +162,7 @@ paths:
         409:
           description: "can't create with given name (it has to be unique)"
 
-  /bid:
+  /api/bid:
     get:
       parameters:
         - name: cat
@@ -178,6 +178,26 @@ paths:
           description: "valid banner was found successfully"
         204:
           description: "no banner was found"
+
+  /api/login:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "schemas.yaml#/components/schemas/Login"
+      responses:
+        200:
+          description: "authenticated successfully"
+          headers:
+            JWT:
+              description: "JWT associated with the login"
+              content:
+                plain/text:
+                  schema:
+                    type: string
+        401:
+          description: "authentication failed"
 
 
 

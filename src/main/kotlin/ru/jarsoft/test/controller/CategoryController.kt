@@ -6,7 +6,7 @@ import ru.jarsoft.test.dto.mapper.CategoryDtoMapper
 import ru.jarsoft.test.service.CategoryService
 
 @RestController
-@RequestMapping("/category")
+@RequestMapping("/api/category")
 class CategoryController(
     val service: CategoryService,
     val categoryDtoMapper: CategoryDtoMapper

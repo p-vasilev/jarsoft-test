@@ -23,7 +23,7 @@ class RequestSender (
     fun createCategory(name: String, requestId: String): ResponseEntity<String> {
         val entity = HttpEntity(null, headers)
         return restTemplate.exchange(
-            createURL("/category/new?name=$name&requestId=$requestId"),
+            createURL("/api/category/new?name=$name&requestId=$requestId"),
             HttpMethod.POST,
             entity,
             String::class.java
@@ -54,7 +54,7 @@ class RequestSender (
         )
 
         return restTemplate.exchange(
-            createURL("/banner/new"),
+            createURL("/api/banner/new"),
             HttpMethod.POST,
             entity2,
             String::class.java
@@ -66,7 +66,7 @@ class RequestSender (
     fun getAllCategories(): List<CategoryDto> {
         val entity = HttpEntity(null, headers)
         val response = restTemplate.exchange(
-            createURL("/category/all"),
+            createURL("/api/category/all"),
             HttpMethod.GET,
             entity,
             String::class.java
@@ -84,7 +84,7 @@ class RequestSender (
     fun getAllBanners(): List<BannerDto> {
         val entity = HttpEntity(null, headers)
         val response = restTemplate.exchange(
-            createURL("/banner/all"),
+            createURL("/api/banner/all"),
             HttpMethod.GET,
             entity,
             String::class.java
@@ -108,7 +108,7 @@ class RequestSender (
     fun deleteCategory(id: Long): ResponseEntity<String>? {
         val entity = HttpEntity(null, headers)
         return restTemplate.exchange(
-            createURL("/category/$id"),
+            createURL("/api/category/$id"),
             HttpMethod.DELETE,
             entity,
             String::class.java
@@ -118,7 +118,7 @@ class RequestSender (
     fun deleteBanner(id: Long): ResponseEntity<String>? {
         val entity = HttpEntity(null, headers)
         return restTemplate.exchange(
-            createURL("/banner/$id"),
+            createURL("/api/banner/$id"),
             HttpMethod.DELETE,
             entity,
             String::class.java
@@ -128,7 +128,7 @@ class RequestSender (
     fun getBannerIdNames(): List<IdName> {
         val entity = HttpEntity(null, headers)
         val response = restTemplate.exchange(
-            createURL("/banner/ids_and_names"),
+            createURL("/api/banner/ids_and_names"),
             HttpMethod.GET,
             entity,
             String::class.java
@@ -147,7 +147,7 @@ class RequestSender (
 
         val entity = HttpEntity(null, postHeaders)
         return restTemplate.exchange(
-            createURL("/category/$id?name=$name&requestId=$requestId"),
+            createURL("/api/category/$id?name=$name&requestId=$requestId"),
             HttpMethod.PUT,
             entity,
             String::class.java
@@ -170,7 +170,7 @@ class RequestSender (
             ),
             postHeaders)
         return restTemplate.exchange(
-            createURL("/banner/$id"),
+            createURL("/api/banner/$id"),
             HttpMethod.PUT,
             entity,
             String::class.java
@@ -188,7 +188,7 @@ class RequestSender (
     fun getCategory(id: Long): CategoryDto {
         val entity = HttpEntity(null, headers)
         val response = restTemplate.exchange(
-            createURL("/category/$id"),
+            createURL("/api/category/$id"),
             HttpMethod.GET,
             entity,
             String::class.java
@@ -202,7 +202,7 @@ class RequestSender (
     fun getBanner(id: Long): BannerDto {
         val entity = HttpEntity(null, headers)
         val response = restTemplate.exchange(
-            createURL("/banner/$id"),
+            createURL("/api/banner/$id"),
             HttpMethod.GET,
             entity,
             String::class.java
@@ -216,7 +216,7 @@ class RequestSender (
     fun getBid(categories: List<String>): ResponseEntity<String> {
         val entity = HttpEntity(null, headers)
         return restTemplate.exchange(
-            createURL("/bid?" + categories.map { "cat=$it" }.reduce{ a, b -> "$a&$b" }),
+            createURL("/api/bid?" + categories.map { "cat=$it" }.reduce{ a, b -> "$a&$b" }),
             HttpMethod.GET,
             entity,
             String::class.java
@@ -228,7 +228,7 @@ class RequestSender (
         bidHeaders.set("User-Agent", userAgent)
         val entity = HttpEntity(null, bidHeaders)
         return restTemplate.exchange(
-            createURL("/bid?" + categories.map { "cat=$it" }.reduce{ a, b -> "$a&$b" }),
+            createURL("/api/bid?" + categories.map { "cat=$it" }.reduce{ a, b -> "$a&$b" }),
             HttpMethod.GET,
             entity,
             String::class.java
@@ -244,7 +244,7 @@ class RequestSender (
             headers
         )
         val response = restTemplate.exchange(
-            createURL("/login"),
+            createURL("/api/login"),
             HttpMethod.POST,
             entity,
             String::class.java

@@ -8,7 +8,7 @@ import ru.jarsoft.test.service.BidService
 import javax.servlet.http.HttpServletRequest
 
 @RestController
-@RequestMapping("/bid")
+@RequestMapping("/api/bid")
 class BidController(
     val service: BidService,
     val request: HttpServletRequest

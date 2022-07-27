@@ -9,7 +9,7 @@ import ru.jarsoft.test.dto.mapper.BannerDtoMapper
 import ru.jarsoft.test.service.BannerService
 
 @RestController
-@RequestMapping("/banner")
+@RequestMapping("/api/banner")
 class BannerController(
     val service: BannerService,
     val bannerDtoMapper: BannerDtoMapper

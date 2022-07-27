@@ -10,7 +10,7 @@ import ru.jarsoft.test.service.UserService
 class UserController(
     val service: UserService
 ) {
-    @PostMapping("/register")
+    @PostMapping("/api/register")
     fun register(
         @RequestBody login: Login
     ) {

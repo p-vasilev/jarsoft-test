@@ -29,7 +29,7 @@ class JwtAuthorizationFilter: OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        if (request.requestURI.toString() in listOf("/login", "/register", "/bid")) {
+        if (request.requestURI.toString() in listOf("/api/login", "/api/register", "/api/bid")) {
             filterChain.doFilter(request, response)
         } else {
             val token = extractJwt(request)

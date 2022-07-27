@@ -24,7 +24,6 @@ class SecurityConfig {
     fun jwtAuthenticationFilter(authenticationManager: AuthenticationManager): JwtAuthenticationFilter {
         val filter = JwtAuthenticationFilter()
         filter.setAuthenticationManager(authenticationManager)
-
         return filter
     }
 
@@ -54,7 +53,7 @@ class SecurityConfig {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
-            .antMatchers("/bid", "/auth/**", "/register")
+            .antMatchers("/api/bid", "/api/login", "/register")
             .permitAll()
             .and()
             .formLogin()

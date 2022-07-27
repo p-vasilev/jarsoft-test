@@ -108,13 +108,13 @@ class IntegrationTestsWithPopulatedDB {
         val entity = HttpEntity(null, requestSender.headers)
 
         val bannerResponse = restTemplate.exchange(
-            requestSender.createURL("/banner/$bannerId"),
+            requestSender.createURL("/api/banner/$bannerId"),
             HttpMethod.GET,
             entity,
             String::class.java
         )
         val categoryResponse = restTemplate.exchange(
-            requestSender.createURL("/category/$catId"),
+            requestSender.createURL("/api/category/$catId"),
             HttpMethod.GET,
             entity,
             String::class.java
@@ -290,14 +290,21 @@ class IntegrationTestsWithPopulatedDB {
                 dto.categories.map{ it.requestId }.contains(categories[0])
             }.first { it.price == expectedPrice}.text
 
-        assert(response.body == expectedText)
+        assert(response.body == expectedText) {
+            println("Expected: $expectedText, actual: ${response.body}")
+        }
     }
 
     @Test
     fun givenPopulatedDB_whenBidCategoryWithoutBanners_thenGetNoContent() {
         val categories = listOf("crypto")
         val response = requestSender.getBid(categories)
-        assert(response.statusCode == HttpStatus.NO_CONTENT)
+        assert(response.statusCode == HttpStatus.NO_CONTENT) {
+            println("Expected 204 No Content")
+            println("Actual response:")
+            println(response.statusCode)
+            println(response.body)
+        }
     }
 
     @Test
