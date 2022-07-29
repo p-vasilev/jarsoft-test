@@ -15,11 +15,13 @@ class BannerController(
     val bannerDtoMapper: BannerDtoMapper
 ) {
 
+    @CrossOrigin
     @GetMapping("/ids_and_names")
     fun getIdsAndNames(): List<IdName> {
         return service.getIdsAndNames()
     }
 
+    @CrossOrigin
     @PostMapping("/new")
     fun createBanner(
         @RequestBody newBanner: BannerWithoutId
@@ -27,6 +29,7 @@ class BannerController(
         return service.createBanner(newBanner)
     }
 
+    @CrossOrigin
     @GetMapping("/{id}")
     fun getBanner(
         @PathVariable id: Long
@@ -37,6 +40,7 @@ class BannerController(
         return bannerDtoMapper.toDTO(answer.get())
     }
 
+    @CrossOrigin
     @DeleteMapping("/{id}")
     fun deleteBanner(
         @PathVariable id: Long
@@ -44,6 +48,7 @@ class BannerController(
         service.deleteBannerById(id)
     }
 
+    @CrossOrigin
     @PutMapping("/{id}")
     fun updateBanner(
         @PathVariable id: Long,
@@ -52,6 +57,7 @@ class BannerController(
         service.updateBanner(id, newBanner)
     }
 
+    @CrossOrigin
     @GetMapping("/all")
     fun getAllBanners(): List<BannerDto> {
         val serviceResult = service.getAllBanners()

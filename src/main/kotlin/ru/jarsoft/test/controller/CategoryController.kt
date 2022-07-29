@@ -12,6 +12,7 @@ class CategoryController(
     val categoryDtoMapper: CategoryDtoMapper
 ) {
 
+    @CrossOrigin
     @GetMapping("/all")
     fun getAllCategories(): List<CategoryDto> {
         return service.getAllCategories().map {
@@ -19,6 +20,7 @@ class CategoryController(
         }
     }
 
+    @CrossOrigin
     @PostMapping("/new")
     fun createCategory(
         @RequestParam name: String,
@@ -27,6 +29,7 @@ class CategoryController(
         return service.createCategory(name, requestId)
     }
 
+    @CrossOrigin
     @GetMapping("/{id}")
     fun getCategory(
         @PathVariable id: Long
@@ -35,6 +38,7 @@ class CategoryController(
         return categoryDtoMapper.toDTO(res)
     }
 
+    @CrossOrigin
     @PutMapping("/{id}")
     fun updateCategory(
         @PathVariable id: Long,
@@ -44,6 +48,7 @@ class CategoryController(
         service.updateCategory(id, name, requestId)
     }
 
+    @CrossOrigin
     @DeleteMapping("/{id}")
     fun deleteCategory(
         @PathVariable id: Long

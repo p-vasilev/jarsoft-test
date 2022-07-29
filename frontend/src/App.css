@@ -1,0 +1,84 @@
+.App {
+  text-align: center;
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  /*min-height: 80vh;*/
+  /*display: flex;*/
+  /*flex-direction: column;*/
+  /*align-items: center;*/
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  /*border-bottom: 3px solid aqua;*/
+  color: white;
+  font-family: "Comic Sans MS";
+  z-index: 1;
+}
+
+.App-sider {
+  background-color: #282c34;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  border-right: 3px solid aqua;
+  border-top: 3px solid aqua;
+  color: white;
+  font-family: "Comic Sans MS";
+  z-index: 1;
+}
+
+.App-content {
+  background-color: #282c34;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  border-left: 3px solid aqua;
+  border-top: 3px solid aqua;
+  color: white;
+  font-family: "Comic Sans MS";
+  z-index: 1;
+}
+
+.App-title {
+  float: left;
+  color: white;
+  padding-right: 30px;
+}
+
+.Login-form {
+  padding-top: 400px;
+  background-color: #282c34;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  font-family: "Ubuntu Mono";
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+.Cool-text {
+  position: center;
+  align-items: center;
+  justify-content: center;
+  z-index: 2
+}
+
