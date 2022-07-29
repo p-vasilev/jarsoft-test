@@ -17,7 +17,7 @@ import ru.jarsoft.test.dto.*
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @ActiveProfiles("testcontainers")
-class IntegrationTestsWithPopulatedDB {
+class PopulatedDBIntegrationTests {
 
     @LocalServerPort
     val port = 0
