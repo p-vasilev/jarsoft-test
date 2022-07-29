@@ -45,6 +45,6 @@ class JwtAuthenticationFilter: UsernamePasswordAuthenticationFilter() {
         chain: FilterChain,
         authentication: Authentication
     ) {
-        response.addHeader("JWT", jwtProvider.generateToken(authentication))
+        response.writer.write(jwtProvider.generateToken(authentication))
     }
 }

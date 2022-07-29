@@ -249,7 +249,7 @@ class RequestSender (
             entity,
             String::class.java
         )
-        jwt = response.headers["JWT"]!![0]
+        jwt = response.body!!
         headers.set("Authorization", "Bearer $jwt")
     }
 

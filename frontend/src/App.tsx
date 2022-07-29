@@ -8,6 +8,7 @@ import "antd/dist/antd.css"
 import {AuthenticatedApi} from "./api/AuthenticatedApi";
 import {login} from "./api/Api";
 import {AxiosResponse} from "axios";
+import {ItemType} from "antd/es/menu/hooks/useItems";
 
 interface AppState {
     authenticated: boolean
@@ -29,6 +30,8 @@ class App extends React.Component<any, AppState> {
             errors: [],
             currentPart: "login"
         }
+
+        this.handleMenuClick.bind(this)
     }
     renderContent() {
         switch(this.state.currentPart) {
@@ -41,7 +44,8 @@ class App extends React.Component<any, AppState> {
                             login(data.username, data.password)
                                 .then((value: AxiosResponse<any>) => {
                                     console.log("Login response... get!")
-                                    console.log(value.statusText)
+                                    console.log(value)
+                                    console.log(value.status)
                                     console.log(value.data)
                                     console.log(value.headers["JWT"])
                                 })
@@ -53,6 +57,28 @@ class App extends React.Component<any, AppState> {
             case "category":
                 return <div/>
         }
+    }
+
+    handleMenuClick(item: ItemType) {
+        if (!item)
+            return
+        let newPart: "login" | "category" | "banner" | undefined
+        switch (item.key) {
+            case '1':
+                newPart = "login"
+                break;
+            case '2':
+                newPart = "category"
+                break;
+            case '3':
+                newPart = "banner"
+                break;
+        }
+        if (!newPart)
+            return
+        this.setState({
+            currentPart: newPart
+        })
     }
 
     render() {
@@ -72,6 +98,7 @@ class App extends React.Component<any, AppState> {
                             mode="horizontal"
                             theme="dark"
                             className="App-menu"
+                            onClick = {(i: ItemType) => this.handleMenuClick(i)}
                         >
                         </Menu>
                     </Header>
