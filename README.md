@@ -1,6 +1,6 @@
 # jarsoft-test
 ## How to build:  
-**Note: this process is only for backend, frontend is not yet in this repo...**  
+**Note: this process is only for backend, frontend is not yet in this branch... (check `frontend` branch if you want to see current progress on it)**  
 ### Prerequisites:  
 - maven (version used: 3.8.4)
 - java 17 (tested on openjdk)
