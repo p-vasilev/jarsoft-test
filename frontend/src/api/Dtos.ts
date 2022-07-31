@@ -1,21 +1,19 @@
 
 export interface IdName {
-    id: string
+    id: number
     name: string
 }
 
 export interface BannerDto {
-    id: string
+    id: number
     name: string
     text: string
     price: number
     categories: CategoryDto[]
 }
 
-export interface CategoryDto {
-    id: string
-    name: string
-    requestId: string
+export interface CategoryDto extends CategoryWithoutId {
+    id: number
 }
 
 export interface BannerWithoutId {
