@@ -19,6 +19,9 @@ To run tests execute `mvn test` (or drop `-Dmaven.test.skip` from the install co
 
 ### Frontend  
 To check out the frontend:
-- run `npm install` inside `frontend` directory  
-After that you can start the Node server by running `npm start` in the same directory (it should launch the browser, but if it doesn't, go to `http://localhost:3000` in your browser)
+- run `npm install` inside `frontend` directory    
+
+After that you can start the Node server by running `npm start` in the same directory (it should launch the browser, but if it doesn't, go to `http://localhost:3000` in your browser)    
+
+Also: only logging in and CRUD for categories is available from the frontend for now
 
