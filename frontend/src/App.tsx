@@ -40,6 +40,8 @@ function App() {
     const [newBanner, setNewBanner] = useState<BannerWithoutId>()
     const [bannerForm] = Form.useForm()
 
+    const [sidebarSearchString, setSidebarSearchString] = useState("")
+
     const updateCategories = useCallback(() => {
         console.log("Getting categories...")
         authenticatedApi?.getAllCategories()
@@ -72,6 +74,7 @@ function App() {
         setNewCategory(undefined)
         setCurrentBanner(undefined)
         setNewBanner(undefined)
+        setSidebarSearchString("")
     }
 
     const handleHeaderMenuClick = (item: ItemType) => {
@@ -384,10 +387,13 @@ function App() {
     }
 
     const getSidebarLabels = () => {
+        const searchFilter = (s:string) => s.toLowerCase().includes(sidebarSearchString.toLowerCase())
         if (currentView === "category" && categories)
             return categories.map((c) => c.name)
+                .filter(searchFilter)
         if (currentView === "banner" && bannerIdNames)
             return bannerIdNames.map((c) => c.name)
+                .filter(searchFilter)
         return []
     }
 
@@ -441,6 +447,8 @@ function App() {
                                 onClick={handleSidebarMenuClick}
                                 onClickNew={handleNewItemClick}
                                 selectedKeys={getSidebarSelectedKeys()}
+                                searchString={sidebarSearchString}
+                                onSearchChange={(e) => setSidebarSearchString(e.target.value)}
                             /> : null
                     }
                     <Content className="App-content">

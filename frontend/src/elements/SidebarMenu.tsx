@@ -10,11 +10,17 @@ const SidebarMenu = (props: {
     labels: string[],
     onClick: (item: ItemType) => void,
     selectedKeys?: string[],
-    onClickNew: () => void
+    onClickNew: () => void,
+    searchString: string,
+    onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }) => {
     return (
         <Sider className="App-sider">
-            <Input placeholder="Search..."/>
+            <Input
+                placeholder="Search..."
+                value={props.searchString}
+                onChange={props.onSearchChange}
+            />
             <Menu
                 items={stringArrayToMenuItems(props.labels)}
                 theme="dark"
