@@ -7,6 +7,8 @@ import Button from "antd/es/button";
 import TextArea from "antd/es/input/TextArea";
 import Modal from "antd/es/modal/Modal";
 import {CategoryDto} from "../api/Dtos";
+import MenuItem from "antd/es/menu/MenuItem";
+import {ItemType} from "antd/es/menu/hooks/useItems";
 
 function BannerForm(props: {
     form: FormInstance,
@@ -15,7 +17,8 @@ function BannerForm(props: {
     onDelete: () => void,
     skipPopConfirm?: boolean,
     categories: CategoryDto[],
-    onCatTagClose?: () => void
+    onCatTagClose: (e: number) => void,
+    onCatMenuClick: (i: ItemType) => void
 }) {
     const [popVisible, setPopVisible] = useState(false)
     const [catModalVisible, setCatModalVisible] = useState(false)
@@ -56,7 +59,9 @@ function BannerForm(props: {
                                                 {...field}
                                                 label={ index === 0 ? <MyLabel value="Categories"/> : ''}
                                             >
-                                                <Tag closable style={{fontSize:"14px"}}>
+                                                <Tag closable style={{fontSize:"14px"}} onClose={(e) => {
+                                                    props.onCatTagClose(field.key)
+                                                }}>
                                                     {props.form.getFieldValue("categories")[field.key].name}
                                                 </Tag>
                                             </Form.Item>
@@ -92,8 +97,12 @@ function BannerForm(props: {
                                         label: c.name
                                     }))
                                 }
-                            >
-                            </Menu>
+                                onClick={(item: ItemType) => {
+                                    props.onCatMenuClick(item)
+                                    setCatModalVisible(false)
+                                    }
+                                }
+                            />
                         </Modal>
                     </Col>
                 </Row>

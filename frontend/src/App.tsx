@@ -16,6 +16,7 @@ import SidebarMenu from "./elements/SidebarMenu";
 import {stringArrayToMenuItems} from "./Util";
 import BannerForm from "./elements/BannerForm";
 import {carryValue} from "@testing-library/user-event/dist/keyboard/shared";
+import MenuItem from "antd/es/menu/MenuItem";
 
 
 function App() {
@@ -243,6 +244,45 @@ function App() {
         }
     }
 
+    const handleBannerFormCatTagClose = (index: number) => {
+        if (!currentBanner)
+            return
+        let newCats = currentBanner.categories.filter((v, i) => i !== index)
+        console.log(categories)
+        console.log(currentBanner.categories[index])
+        console.log(newCats)
+        setCurrentBanner({
+            id: currentBanner.id,
+            name: currentBanner.name,
+            price: currentBanner.price,
+            categories: newCats,
+            text: currentBanner.text
+        })
+        bannerForm.setFieldValue("categories", newCats)
+    }
+
+    const handleBannerFormCatMenuClick = (i: ItemType) => {
+        if (!currentBanner || !categories || !i)
+            return
+        console.log(i)
+        console.log(categories)
+        const cat = categories.find((c) => c.id.toString() === i.key)
+        if (!cat) {
+            console.log("couldn't find category")
+            console.log(cat)
+            return
+        }
+        const newCats = currentBanner.categories.concat(cat)
+        setCurrentBanner({
+            id: currentBanner.id,
+            name: currentBanner.name,
+            price: currentBanner.price,
+            categories: newCats,
+            text: currentBanner.text
+        })
+        bannerForm.setFieldValue("categories", newCats)
+    }
+
     const MainContent = () => {
         switch(currentView) {
             case "login":
@@ -261,6 +301,8 @@ function App() {
                         onSave={handleBannerFormSave}
                         skipPopConfirm={newBanner !== undefined}
                         categories={categories}
+                        onCatTagClose={handleBannerFormCatTagClose}
+                        onCatMenuClick={handleBannerFormCatMenuClick}
                     /> : <div/>
                 )
             case "category":
