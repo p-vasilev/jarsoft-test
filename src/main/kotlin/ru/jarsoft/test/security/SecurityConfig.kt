@@ -84,7 +84,7 @@ class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
-                .antMatchers("/api/bid", "/api/login", "/register")
+                .antMatchers("/api/bid", "/api/login", "/register", "/error")
                 .permitAll()
             .and()
             .formLogin()

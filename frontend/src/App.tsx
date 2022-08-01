@@ -2,7 +2,7 @@ import Layout, {Content, Header} from "antd/es/layout/layout";
 import {Menu} from "antd";
 import {ItemType} from "antd/es/menu/hooks/useItems";
 import React, {FormEvent, useCallback, useEffect, useState} from "react";
-import {CategoryDto, CategoryWithoutId, IdName} from "./api/Dtos";
+import {BannerDto, BannerWithoutId, CategoryDto, CategoryWithoutId, IdName} from "./api/Dtos";
 import Form from "antd/es/form";
 import {login} from "./api/Api";
 import {AxiosResponse} from "axios";
@@ -14,24 +14,33 @@ import LoginForm from "./elements/LoginForm";
 import CategoryForm from "./elements/CategoryForm";
 import SidebarMenu from "./elements/SidebarMenu";
 import {stringArrayToMenuItems} from "./Util";
+import BannerForm from "./elements/BannerForm";
+import {carryValue} from "@testing-library/user-event/dist/keyboard/shared";
 
 
 function App() {
     const [authenticated, setAuthenticated] = useState(false)
-    const [currentPart, setCurrentPart] = useState<"login" | "category" | "banner">("login")
+    const [authenticatedApi, setAuthenticatedApi] = useState<AuthenticatedApi>()
+    const [justAuthenticated, setJustAuthenticated] = useState(false)
+
+    const [currentView, setCurrentView] = useState<"login" | "category" | "banner">("login")
+
     const [categories, setCategories] = useState<CategoryDto[]>()
     const [currentCategory, setCurrentCategory] = useState<CategoryDto>()
-    const [catForm] = Form.useForm()
-    const [bannerIdNames, setBannerIdNames] = useState<IdName[]>()
-    const [authenticatedApi, setAuthenticatedApi] = useState<AuthenticatedApi>()
     const [newCategory, setNewCategory] = useState<CategoryWithoutId>()
-    const [creatingNewItem, setCreatingNewItem] = useState(false)
+    const [catForm] = Form.useForm<{
+        id?: number,
+        name: string,
+        requestId: string
+    }>()
 
-    const [justAuthenticated, setJustAuthenticated] = useState(false)
+    const [bannerIdNames, setBannerIdNames] = useState<IdName[]>()
+    const [currentBanner, setCurrentBanner] = useState<BannerDto>()
+    const [newBanner, setNewBanner] = useState<BannerWithoutId>()
+    const [bannerForm] = Form.useForm()
 
     const updateCategories = useCallback(() => {
         console.log("Getting categories...")
-        console.log(authenticatedApi)
         authenticatedApi?.getAllCategories()
             .then((value: AxiosResponse) => {
                 console.log(value)
@@ -47,6 +56,23 @@ function App() {
         }
     }, [justAuthenticated, updateCategories])
 
+    const updateBannerIdNames = () => {
+        console.log("Getting banner ids and names...")
+        authenticatedApi?.getBannerIdNames()
+            .then((value: AxiosResponse) => {
+                console.log(value)
+                if (value.status === 200)
+                    setBannerIdNames(value.data)
+            })
+    }
+
+    const clearFormState = () => {
+        setCurrentCategory(undefined)
+        setNewCategory(undefined)
+        setCurrentBanner(undefined)
+        setNewBanner(undefined)
+    }
+
     const handleHeaderMenuClick = (item: ItemType) => {
         if (!item)
             return
@@ -54,24 +80,22 @@ function App() {
         switch (item.key) {
             case '1':
                 newPart = "login"
+                clearFormState()
                 break;
             case '2':
                 newPart = "category"
+                clearFormState()
                 updateCategories()
                 break;
             case '3':
                 newPart = "banner"
+                clearFormState()
+                updateBannerIdNames()
                 break;
         }
         if (!newPart)
             return
-        setCurrentPart(newPart)
-    }
-
-    const BannerForm = () => {
-        return (
-            <></>
-        )
+        setCurrentView(newPart)
     }
 
     const handleCategoryFormSave = () => {
@@ -92,7 +116,6 @@ function App() {
                     console.log(value.data)
                     if (newCategory) {
                         setNewCategory(undefined)
-                        setCreatingNewItem(false)
                         setCurrentCategory({
                             id: value.data,
                             name: newCategory.name,
@@ -137,66 +160,159 @@ function App() {
         }
     }
 
-    const renderContent = () => {
-        switch(currentPart) {
+    const handleLoginFormFinish = (data: any) => {
+        login(data.username, data.password)
+            .then((value: AxiosResponse) => {
+                console.log("Login response... get!")
+                console.log(value)
+                console.log(value.status)
+                let jwt = value.data
+                setAuthenticated(true)
+                setAuthenticatedApi(new AuthenticatedApi(jwt))
+                setCurrentView("category")
+                setJustAuthenticated(true)
+                console.log(jwt)
+            })
+    }
+
+    const handleBannerFormChange = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const name = bannerForm.getFieldValue("name")
+        const price = bannerForm.getFieldValue("price")
+        const text = bannerForm.getFieldValue("text")
+        const cats = bannerForm.getFieldValue("categories")
+        if (currentBanner) {
+            setCurrentBanner({
+                id: currentBanner.id,
+                name: name,
+                price: price,
+                text: text,
+                categories: cats
+            })
+        } else if (newBanner) {
+            setNewBanner({
+                name: name,
+                price: price,
+                text: text,
+                categories: cats.map((c: CategoryDto)=>(c.id))
+            })
+        }
+    }
+
+    const handleBannerFormSave = () => {
+        console.log(currentBanner)
+        if (currentBanner) {
+            authenticatedApi?.updateBanner(currentBanner)
+                .then((value) => {
+                    console.log("Got response to update banner request")
+                    console.log(value)
+                    updateBannerIdNames()
+                })
+        } else if (newBanner) {
+            authenticatedApi?.createBanner(newBanner)
+                .then((value) => {
+                    console.log("Created banner")
+                    console.log(value)
+                    if (newBanner) {
+                        setCurrentBanner({
+                            id: value.data,
+                            name: newBanner.name,
+                            price: newBanner.price,
+                            text: newBanner.text,
+                            categories:
+                                categories ?
+                                    categories?.filter((c)=>(newBanner.categories.includes(c.id))) : []
+                        })
+                        setNewBanner(undefined)
+                    }
+                    bannerForm.setFieldValue("id", value.data)
+                    updateBannerIdNames()
+                })
+        }
+    }
+
+    const handleBannerFormDelete = () => {
+        if(currentBanner) {
+            authenticatedApi?.deleteBanner(currentBanner.id)
+                .then(()=>{
+                    console.log("Deleted banner")
+                    console.log(currentBanner)
+                    setCurrentBanner(undefined)
+                    updateBannerIdNames()
+                })
+        }
+    }
+
+    const MainContent = () => {
+        switch(currentView) {
             case "login":
                 return(
-                    <LoginForm authenticated={authenticated} handleFinish={(data: any) => {
-                        login(data.username, data.password)
-                            .then((value: AxiosResponse) => {
-                                console.log("Login response... get!")
-                                console.log(value)
-                                console.log(value.status)
-                                let jwt = value.data
-                                setAuthenticated(true)
-                                setAuthenticatedApi(new AuthenticatedApi(jwt))
-                                setCurrentPart("category")
-                                setJustAuthenticated(true)
-                                console.log(jwt)
-                            })
-                    }}/>
+                    <LoginForm
+                        authenticated={authenticated}
+                        handleFinish={handleLoginFormFinish}
+                    />
                 )
             case "banner":
-                return BannerForm()
+                return ((currentBanner || newBanner) && categories ?
+                    <BannerForm
+                        form={bannerForm}
+                        onChange={handleBannerFormChange}
+                        onDelete={handleBannerFormDelete}
+                        onSave={handleBannerFormSave}
+                        skipPopConfirm={newBanner !== undefined}
+                        categories={categories}
+                    /> : <div/>
+                )
             case "category":
-                return ((currentCategory || newCategory) &&
+                return ((currentCategory || newCategory) ?
                     <CategoryForm
                         form={catForm}
                         onChange={handleCategoryFormChange}
                         onSave={handleCategoryFormSave}
                         onDelete={handleCategoryFormDelete}
-                        skipPopConfirm={creatingNewItem}
-                    />
+                        skipPopConfirm={newCategory !== undefined}
+                    /> : <div/>
                 )
             default:
-                return <></>
+                return <div/>
         }
-    }
-
-    const updateCatForm = (t: CategoryDto) => {
-        catForm.setFields([
-            {name: "id", value: t.id},
-            {name: "name", value: t.name},
-            {name: "requestId", value: t.requestId}
-        ])
     }
 
     const handleSidebarMenuClick = (item: ItemType) => {
         if (!item)
             return
-        if (categories && currentPart === "category") {
+        if (categories && currentView === "category") {
             const t = categories[item.key as number - 1]
             console.log(t)
-            setCreatingNewItem(false)
             setNewCategory(undefined)
             setCurrentCategory(t)
-            updateCatForm(t)
+            catForm.setFields([
+                {name: "id", value: t.id},
+                {name: "name", value: t.name},
+                {name: "requestId", value: t.requestId}
+            ])
+            return
+        }
+        if (bannerIdNames && currentView === "banner") {
+            const t = bannerIdNames[item.key as number - 1]
+            setNewBanner(undefined)
+            authenticatedApi?.getBanner(t.id)
+                .then((value)=>{
+                    const banner: BannerDto = value.data
+                    setCurrentBanner(banner)
+                    bannerForm.setFields([
+                        {name: "id", value: banner.id},
+                        {name: "name", value: banner.name},
+                        {name: "price", value: banner.price},
+                        {name: "categories", value: banner.categories},
+                        {name: "text", value: banner.text},
+                    ])
+                })
         }
     }
 
     const handleNewItemClick = () => {
-        if (currentPart === "category") {
-            setCreatingNewItem(true)
+        if (currentView === "category") {
             setCurrentCategory(undefined)
             setNewCategory({
                 name: "",
@@ -208,24 +324,48 @@ function App() {
                 {name: "requestId", value: ""}
             ])
         }
+        if (currentView === "banner") {
+            setCurrentBanner(undefined)
+            setNewBanner({
+                name: "",
+                price: 0.0,
+                text: "",
+                categories: []
+            })
+            bannerForm.setFields([
+                {name:"name", value:""},
+                {name:"price", value:0.0},
+                {name:"text", value:""},
+                {name:"categories", value:[]}
+            ])
+        }
     }
 
     const getSidebarLabels = () => {
-        if (currentPart === "category" && categories)
+        if (currentView === "category" && categories)
             return categories.map((c) => c.name)
-        if (currentPart === "banner" && bannerIdNames)
+        if (currentView === "banner" && bannerIdNames)
             return bannerIdNames.map((c) => c.name)
         return []
     }
 
     const getSidebarSelectedKeys = () => {
-        if (currentPart === "category" && currentCategory) {
+        if (currentView === "category" && currentCategory) {
             const arr =
                 stringArrayToMenuItems(getSidebarLabels())
                     .filter(value => value.label === currentCategory.name)
             if (arr.length !== 1)
                 return []
             return [arr[0].key]
+        }
+        if (currentView === "banner" && currentBanner) {
+            const arr =
+                stringArrayToMenuItems(getSidebarLabels())
+                    .filter(value => value.label === currentBanner.name)
+            if (arr.length !== 1)
+                return []
+            return [arr[0].key]
+
         }
         return []
     }
@@ -242,18 +382,18 @@ function App() {
                             {label: 'Banner', key: "3", disabled: !authenticated}
                         ]}
                         selectedKeys={[
-                            (currentPart === "login") ? '1' :
-                                (currentPart === "category" ? '2' : '3')
+                            (currentView === "login") ? '1' :
+                                (currentView === "category" ? '2' : '3')
                         ]}
                         mode="horizontal"
                         theme="dark"
                         className="App-menu"
-                        onClick = {(i: ItemType) => handleHeaderMenuClick(i)}
+                        onClick = {handleHeaderMenuClick}
                     />
                 </Header>
                 <Layout hasSider>
                     {
-                        currentPart !== "login" ?
+                        currentView !== "login" ?
                             <SidebarMenu
                                 labels={getSidebarLabels()}
                                 onClick={handleSidebarMenuClick}
@@ -262,7 +402,7 @@ function App() {
                             /> : null
                     }
                     <Content className="App-content">
-                        {renderContent()}
+                        <MainContent/>
                     </Content>
                 </Layout>
             </Layout>

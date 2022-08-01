@@ -27,3 +27,12 @@ export interface CategoryWithoutId {
     name: string
     requestId: string
 }
+
+export function bannerStripId(b: BannerDto) {
+    return {
+        name: b.name,
+        price: b.price,
+        text: b.text,
+        categories: b.categories.map((c) => (c.id))
+    }
+}
