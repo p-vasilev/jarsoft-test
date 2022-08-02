@@ -25,3 +25,4 @@ After that you can start the Node server by running `npm start` in the same dire
 
 Now frontend lacks searching through categories when choosing categories in banner form and error message display
 
+Also: the app has a default user with name `user` and password `hunter2`
