@@ -23,5 +23,5 @@ To check out the frontend:
 
 After that you can start the Node server by running `npm start` in the same directory (it should launch the browser, but if it doesn't, go to `http://localhost:3000` in your browser)    
 
-Also: only logging in and CRUD for categories is available from the frontend for now
+Now frontend lacks searching through categories when choosing categories in banner form and error message display
 
