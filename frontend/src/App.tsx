@@ -1,8 +1,8 @@
 import Layout, {Content, Header} from "antd/es/layout/layout";
 import {Menu} from "antd";
 import {ItemType} from "antd/es/menu/hooks/useItems";
-import React, {FormEvent, useCallback, useEffect, useState} from "react";
-import {BannerDto, BannerWithoutId, CategoryDto, CategoryWithoutId, IdName} from "./api/Dtos";
+import React, {useCallback, useEffect, useState} from "react";
+import {BannerDto, CategoryDto, IdName} from "./api/Dtos";
 import Form from "antd/es/form";
 import {login} from "./api/Api";
 import {AxiosResponse} from "axios";
@@ -15,8 +15,6 @@ import CategoryForm from "./elements/CategoryForm";
 import SidebarMenu from "./elements/SidebarMenu";
 import {stringArrayToMenuItems} from "./Util";
 import BannerForm from "./elements/BannerForm";
-import {carryValue} from "@testing-library/user-event/dist/keyboard/shared";
-import MenuItem from "antd/es/menu/MenuItem";
 
 
 function App() {
@@ -25,20 +23,24 @@ function App() {
     const [justAuthenticated, setJustAuthenticated] = useState(false)
 
     const [currentView, setCurrentView] = useState<"login" | "category" | "banner">("login")
+    const [creatingNewItem, setCreatingNewItem] = useState(false)
+    const [formIsOpen, setFormIsOpen] = useState(false)
 
     const [categories, setCategories] = useState<CategoryDto[]>()
-    const [currentCategory, setCurrentCategory] = useState<CategoryDto>()
-    const [newCategory, setNewCategory] = useState<CategoryWithoutId>()
     const [catForm] = Form.useForm<{
-        id?: number,
-        name: string,
+        id?: number
+        name: string
         requestId: string
     }>()
 
     const [bannerIdNames, setBannerIdNames] = useState<IdName[]>()
-    const [currentBanner, setCurrentBanner] = useState<BannerDto>()
-    const [newBanner, setNewBanner] = useState<BannerWithoutId>()
-    const [bannerForm] = Form.useForm()
+    const [bannerForm] = Form.useForm<{
+        id?: number,
+        name: string,
+        price: number,
+        categories: number[],
+        text: string
+    }>()
 
     const [sidebarSearchString, setSidebarSearchString] = useState("")
 
@@ -70,10 +72,8 @@ function App() {
     }
 
     const clearFormState = () => {
-        setCurrentCategory(undefined)
-        setNewCategory(undefined)
-        setCurrentBanner(undefined)
-        setNewBanner(undefined)
+        setFormIsOpen(false)
+        setCreatingNewItem(false)
         setSidebarSearchString("")
     }
 
@@ -103,64 +103,41 @@ function App() {
     }
 
     const handleCategoryFormSave = () => {
-        console.log(currentCategory)
-        if (currentCategory) {
-            authenticatedApi?.updateCategory(currentCategory)
+        if (!creatingNewItem) {
+            authenticatedApi?.updateCategory(catForm.getFieldsValue() as CategoryDto)
                 .then((value) => {
                     console.log("received update category response")
                     console.log(value.status)
                     console.log(value.statusText)
                     updateCategories()
                 })
-        } else if (newCategory) {
-            authenticatedApi?.createCategory(newCategory)
+        } else if (creatingNewItem) {
+            authenticatedApi?.createCategory(catForm.getFieldsValue())
                 .then((value) => {
                     console.log("received update category response")
                     console.log(value.status)
                     console.log(value.data)
-                    if (newCategory) {
-                        setNewCategory(undefined)
-                        setCurrentCategory({
-                            id: value.data,
-                            name: newCategory.name,
-                            requestId: newCategory.requestId
-                        })
-                    }
                     catForm.setFieldValue("id", value.data)
                     updateCategories()
                 })
         }
     }
 
-    const handleCategoryFormChange = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
-        const name = catForm.getFieldValue("name")
-        const requestId = catForm.getFieldValue("requestId")
-        if (currentCategory) {
-            setCurrentCategory({
-                id: currentCategory.id,
-                name: name,
-                requestId: requestId
-            })
-        } else if (newCategory) {
-            setNewCategory({
-                name: name,
-                requestId: requestId
-            })
-        }
-    }
-
     const handleCategoryFormDelete = () => {
-        if (currentCategory) {
-            authenticatedApi?.deleteCategory(currentCategory.id)
+        if (!creatingNewItem) {
+            const id = catForm.getFieldsValue().id
+            if (!id)
+                return
+            authenticatedApi?.deleteCategory(id)
                 .then(()=>{
                     console.log("deleted category:")
-                    console.log(currentCategory)
-                    setCurrentCategory(undefined)
+                    console.log(catForm.getFieldsValue())
+                    setFormIsOpen(false)
                     updateCategories()
                 })
-        } else if (newCategory) {
-            setNewCategory(undefined)
+        } else if (creatingNewItem) {
+            setFormIsOpen(false)
+            setCreatingNewItem(false)
         }
     }
 
@@ -179,93 +156,66 @@ function App() {
             })
     }
 
-    const handleBannerFormChange = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
-        const name = bannerForm.getFieldValue("name")
-        const price = bannerForm.getFieldValue("price")
-        const text = bannerForm.getFieldValue("text")
-        const cats = bannerForm.getFieldValue("categories")
-        if (currentBanner) {
-            setCurrentBanner({
-                id: currentBanner.id,
-                name: name,
-                price: price,
-                text: text,
-                categories: cats
-            })
-        } else if (newBanner) {
-            setNewBanner({
-                name: name,
-                price: price,
-                text: text,
-                categories: cats.map((c: CategoryDto)=>(c.id))
-            })
-        }
-    }
-
     const handleBannerFormSave = () => {
-        console.log(currentBanner)
-        if (currentBanner) {
-            authenticatedApi?.updateBanner(currentBanner)
+        const b = bannerForm.getFieldsValue()
+        if (!creatingNewItem && b.id && categories) {
+            authenticatedApi?.updateBanner({
+                id: b.id,
+                name: b.name,
+                price: b.price,
+                text: b.text,
+                categories: categories.filter((c)=>b.categories.includes(c.id))
+            })
                 .then((value) => {
                     console.log("Got response to update banner request")
                     console.log(value)
                     updateBannerIdNames()
                 })
-        } else if (newBanner) {
-            authenticatedApi?.createBanner(newBanner)
+        } else if (creatingNewItem) {
+            authenticatedApi?.createBanner({
+                name: b.name,
+                price: b.price,
+                text: b.text,
+                categories: b.categories
+            })
                 .then((value) => {
                     console.log("Created banner")
                     console.log(value)
-                    if (newBanner) {
-                        setCurrentBanner({
-                            id: value.data,
-                            name: newBanner.name,
-                            price: newBanner.price,
-                            text: newBanner.text,
-                            categories:
-                                categories ?
-                                    categories?.filter((c)=>(newBanner.categories.includes(c.id))) : []
-                        })
-                        setNewBanner(undefined)
-                    }
+                    setCreatingNewItem(false)
                     bannerForm.setFieldValue("id", value.data)
                     updateBannerIdNames()
                 })
+
         }
     }
 
     const handleBannerFormDelete = () => {
-        if(currentBanner) {
-            authenticatedApi?.deleteBanner(currentBanner.id)
+        if(!creatingNewItem) {
+            const id = bannerForm.getFieldsValue().id
+            if (!id)
+                return
+            authenticatedApi?.deleteBanner(id)
                 .then(()=>{
                     console.log("Deleted banner")
-                    console.log(currentBanner)
-                    setCurrentBanner(undefined)
+                    setFormIsOpen(false)
                     updateBannerIdNames()
                 })
+        } else if (creatingNewItem) {
+            setFormIsOpen(false)
+            setCreatingNewItem(false)
         }
     }
 
     const handleBannerFormCatTagClose = (index: number) => {
-        if (!currentBanner)
-            return
-        let newCats = currentBanner.categories.filter((v, i) => i !== index)
-        console.log(categories)
-        console.log(currentBanner.categories[index])
-        console.log(newCats)
-        setCurrentBanner({
-            id: currentBanner.id,
-            name: currentBanner.name,
-            price: currentBanner.price,
-            categories: newCats,
-            text: currentBanner.text
-        })
-        bannerForm.setFieldValue("categories", newCats)
+        const b = bannerForm.getFieldsValue()
+        bannerForm.setFieldValue(
+            "categories",
+            b.categories.filter((v, i) => i !== index)
+        )
     }
 
     const handleBannerFormCatMenuClick = (i: ItemType) => {
-        if (!currentBanner || !categories || !i)
+        if (!categories || !i)
             return
         console.log(i)
         console.log(categories)
@@ -275,14 +225,7 @@ function App() {
             console.log(cat)
             return
         }
-        const newCats = currentBanner.categories.concat(cat)
-        setCurrentBanner({
-            id: currentBanner.id,
-            name: currentBanner.name,
-            price: currentBanner.price,
-            categories: newCats,
-            text: currentBanner.text
-        })
+        const newCats = bannerForm.getFieldsValue().categories.concat(cat.id)
         bannerForm.setFieldValue("categories", newCats)
     }
 
@@ -296,26 +239,24 @@ function App() {
                     />
                 )
             case "banner":
-                return ((currentBanner || newBanner) && categories ?
+                return (formIsOpen && categories ?
                     <BannerForm
                         form={bannerForm}
-                        onChange={handleBannerFormChange}
                         onDelete={handleBannerFormDelete}
                         onSave={handleBannerFormSave}
-                        skipPopConfirm={newBanner !== undefined}
+                        skipPopConfirm={creatingNewItem}
                         categories={categories}
                         onCatTagClose={handleBannerFormCatTagClose}
                         onCatMenuClick={handleBannerFormCatMenuClick}
                     /> : <div/>
                 )
             case "category":
-                return ((currentCategory || newCategory) ?
+                return (formIsOpen ?
                     <CategoryForm
                         form={catForm}
-                        onChange={handleCategoryFormChange}
                         onSave={handleCategoryFormSave}
                         onDelete={handleCategoryFormDelete}
-                        skipPopConfirm={newCategory !== undefined}
+                        skipPopConfirm={creatingNewItem}
                     /> : <div/>
                 )
             default:
@@ -329,8 +270,7 @@ function App() {
         if (categories && currentView === "category") {
             const t = categories[item.key as number - 1]
             console.log(t)
-            setNewCategory(undefined)
-            setCurrentCategory(t)
+            setFormIsOpen(true)
             catForm.setFields([
                 {name: "id", value: t.id},
                 {name: "name", value: t.name},
@@ -340,29 +280,27 @@ function App() {
         }
         if (bannerIdNames && currentView === "banner") {
             const t = bannerIdNames[item.key as number - 1]
-            setNewBanner(undefined)
+            console.log("getting banner:")
+            console.log(t)
             authenticatedApi?.getBanner(t.id)
                 .then((value)=>{
                     const banner: BannerDto = value.data
-                    setCurrentBanner(banner)
                     bannerForm.setFields([
                         {name: "id", value: banner.id},
                         {name: "name", value: banner.name},
                         {name: "price", value: banner.price},
-                        {name: "categories", value: banner.categories},
+                        {name: "categories", value: banner.categories.map((c)=>c.id)},
                         {name: "text", value: banner.text},
                     ])
+                    setFormIsOpen(true)
                 })
         }
     }
 
     const handleNewItemClick = () => {
         if (currentView === "category") {
-            setCurrentCategory(undefined)
-            setNewCategory({
-                name: "",
-                requestId: ""
-            })
+            setCreatingNewItem(true)
+            setFormIsOpen(true)
             catForm.setFields([
                 {name: "id", value: ""},
                 {name: "name", value: ""},
@@ -370,14 +308,10 @@ function App() {
             ])
         }
         if (currentView === "banner") {
-            setCurrentBanner(undefined)
-            setNewBanner({
-                name: "",
-                price: 0.0,
-                text: "",
-                categories: []
-            })
+            setCreatingNewItem(true)
+            setFormIsOpen(true)
             bannerForm.setFields([
+                {name:"id", value:""},
                 {name:"name", value:""},
                 {name:"price", value:0.0},
                 {name:"text", value:""},
@@ -398,18 +332,18 @@ function App() {
     }
 
     const getSidebarSelectedKeys = () => {
-        if (currentView === "category" && currentCategory) {
+        if (currentView === "category") {
             const arr =
                 stringArrayToMenuItems(getSidebarLabels())
-                    .filter(value => value.label === currentCategory.name)
+                    .filter(value => value.label === catForm.getFieldsValue().name)
             if (arr.length !== 1)
                 return []
             return [arr[0].key]
         }
-        if (currentView === "banner" && currentBanner) {
+        if (currentView === "banner") {
             const arr =
                 stringArrayToMenuItems(getSidebarLabels())
-                    .filter(value => value.label === currentBanner.name)
+                    .filter(value => value.label === bannerForm.getFieldsValue().name)
             if (arr.length !== 1)
                 return []
             return [arr[0].key]

@@ -10,5 +10,5 @@ export function stringArrayToMenuItems(arr: string[]) {
 }
 
 export function MyLabel(props: {value: string, style?: any}) {
-    return <label style={{fontSize:"20px", color:"white"}}>{props.value}</label>
+    return <label style={{...{fontSize: "20px", color: "white"}, ...props.style}}>{props.value}</label>
 }

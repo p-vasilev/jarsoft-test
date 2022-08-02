@@ -1,5 +1,5 @@
 import Form, {FormInstance} from "antd/es/form";
-import React, {FormEvent, ReactNode, useState} from "react";
+import React, {ReactNode, useState} from "react";
 import {MyLabel} from "../Util";
 import Input from "antd/es/input";
 import {Col, Menu, Popconfirm, Row, Tag} from "antd";
@@ -7,12 +7,10 @@ import Button from "antd/es/button";
 import TextArea from "antd/es/input/TextArea";
 import Modal from "antd/es/modal/Modal";
 import {CategoryDto} from "../api/Dtos";
-import MenuItem from "antd/es/menu/MenuItem";
 import {ItemType} from "antd/es/menu/hooks/useItems";
 
 function BannerForm(props: {
     form: FormInstance,
-    onChange: (event: FormEvent<HTMLFormElement>) => void,
     onSave: () => void,
     onDelete: () => void,
     skipPopConfirm?: boolean,
@@ -37,7 +35,7 @@ function BannerForm(props: {
     }
 
     return(
-        <Form form={props.form} onChange={props.onChange}>
+        <Form form={props.form}>
             <div className="Login-form">
                 <Form.Item name="id" label={<MyLabel value="ID"/>}>
                     <Input disabled/>
@@ -50,19 +48,22 @@ function BannerForm(props: {
                 </Form.Item>
                 <Row>
                     <Form.Item name="categories">
-                        <Form.List name="categories">
-                            {(fields, {add, remove}, {errors}): ReactNode => (
+                        <Form.List name="categories" >
+                            {(fields): ReactNode => (
                                 <Row>
-                                    {fields.map((field, index) => (
+                                    <MyLabel value="Categories:"/>
+                                    {fields.map((field) => (
                                         <Col key={field.key}>
                                             <Form.Item
                                                 {...field}
-                                                label={ index === 0 ? <MyLabel value="Categories"/> : ''}
                                             >
-                                                <Tag closable style={{fontSize:"14px"}} onClose={(e) => {
+                                                <Tag closable style={{fontSize:"14px"}} onClose={(_) => {
                                                     props.onCatTagClose(field.key)
                                                 }}>
-                                                    {props.form.getFieldValue("categories")[field.key].name}
+                                                    {props.categories.find(
+                                                        (c) => c.id ===
+                                                            props.form.getFieldValue("categories")[field.key]
+                                                    )?.name}
                                                 </Tag>
                                             </Form.Item>
                                         </Col>
@@ -118,7 +119,7 @@ function BannerForm(props: {
                 </Col>
                 <Col style={{position:"absolute", right:"100px"}}>
                     <Popconfirm
-                        title={"Do you really want to delete this category?"}
+                        title={"Do you really want to delete this banner?"}
                         onConfirm={props.onDelete}
                         onCancel={() => setPopVisible(false)}
                         okText="Yes"

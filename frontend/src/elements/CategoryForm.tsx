@@ -1,4 +1,4 @@
-import React, {FormEvent, useState} from "react";
+import React, {useState} from "react";
 import Form, {FormInstance} from "antd/es/form";
 import Input from "antd/es/input";
 import {Col, Popconfirm, Row} from "antd";
@@ -7,7 +7,6 @@ import {MyLabel} from "../Util";
 
 function CategoryForm(props: {
     form: FormInstance,
-    onChange: (event: FormEvent<HTMLFormElement>) => void,
     onSave: () => void,
     onDelete: () => void,
     skipPopConfirm?: boolean
@@ -28,7 +27,7 @@ function CategoryForm(props: {
     }
 
     return(
-        <Form form={props.form} onChange={props.onChange}>
+        <Form form={props.form}>
             <div className="Login-form">
                 <Form.Item name="id" label={<MyLabel value="ID"/>}>
                     <Input disabled/>
