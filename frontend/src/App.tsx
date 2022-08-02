@@ -43,6 +43,7 @@ function App() {
     }>()
 
     const [sidebarSearchString, setSidebarSearchString] = useState("")
+    const [sidebarSelectedKey, setSidebarSelectedKey] = useState<string>()
 
     const updateCategories = useCallback(() => {
         console.log("Getting categories...")
@@ -72,6 +73,7 @@ function App() {
     }
 
     const clearFormState = () => {
+        setSidebarSelectedKey(undefined)
         setFormIsOpen(false)
         setCreatingNewItem(false)
         setSidebarSearchString("")
@@ -271,6 +273,7 @@ function App() {
             const t = categories[item.key as number - 1]
             console.log(t)
             setFormIsOpen(true)
+            setSidebarSelectedKey(item.key?.toString())
             catForm.setFields([
                 {name: "id", value: t.id},
                 {name: "name", value: t.name},
@@ -282,6 +285,7 @@ function App() {
             const t = bannerIdNames[item.key as number - 1]
             console.log("getting banner:")
             console.log(t)
+            setSidebarSelectedKey(item.key?.toString())
             authenticatedApi?.getBanner(t.id)
                 .then((value)=>{
                     const banner: BannerDto = value.data
@@ -299,6 +303,7 @@ function App() {
 
     const handleNewItemClick = () => {
         if (currentView === "category") {
+            setSidebarSelectedKey(undefined)
             setCreatingNewItem(true)
             setFormIsOpen(true)
             catForm.setFields([
@@ -308,6 +313,7 @@ function App() {
             ])
         }
         if (currentView === "banner") {
+            setSidebarSelectedKey(undefined)
             setCreatingNewItem(true)
             setFormIsOpen(true)
             bannerForm.setFields([
@@ -336,16 +342,20 @@ function App() {
             const arr =
                 stringArrayToMenuItems(getSidebarLabels())
                     .filter(value => value.label === catForm.getFieldsValue().name)
-            if (arr.length !== 1)
+            if (arr.length !== 1) {
+                console.log(arr)
                 return []
+            }
             return [arr[0].key]
         }
         if (currentView === "banner") {
             const arr =
                 stringArrayToMenuItems(getSidebarLabels())
                     .filter(value => value.label === bannerForm.getFieldsValue().name)
-            if (arr.length !== 1)
+            if (arr.length !== 1) {
+                console.log(arr)
                 return []
+            }
             return [arr[0].key]
 
         }
@@ -380,7 +390,7 @@ function App() {
                                 labels={getSidebarLabels()}
                                 onClick={handleSidebarMenuClick}
                                 onClickNew={handleNewItemClick}
-                                selectedKeys={getSidebarSelectedKeys()}
+                                selectedKeys={sidebarSelectedKey ? [sidebarSelectedKey] : []}
                                 searchString={sidebarSearchString}
                                 onSearchChange={(e) => setSidebarSearchString(e.target.value)}
                             /> : null
